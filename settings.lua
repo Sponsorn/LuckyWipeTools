@@ -313,6 +313,8 @@ CreateScrollPicker(settingsFrame, "Alert Sound", 20, yOffset,
         -- Preview the sound
         local soundPath = LWT:GetSoundFile()
         if soundPath then PlaySoundFile(soundPath, "Master") end
+        -- Re-register private aura sounds with new selection
+        LWT:RefreshAuras()
     end
 )
 yOffset = yOffset - 52

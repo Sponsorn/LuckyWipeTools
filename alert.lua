@@ -51,10 +51,13 @@ function LWT:FireAlert(text)
     alertFrame:SetAlpha(1)
     alertFrame:Show()
 
-    -- Play sound if enabled
-    local soundFile = self:GetSoundFile()
-    if soundFile then
-        PlaySoundFile(soundFile, "Master")
+    -- Sound is handled by AddPrivateAuraSounds during encounters
+    -- Only play manually for test commands
+    if not InCombatLockdown() then
+        local soundFile = self:GetSoundFile()
+        if soundFile then
+            PlaySoundFile(soundFile, "Master")
+        end
     end
 
     -- Cancel existing fade timer
