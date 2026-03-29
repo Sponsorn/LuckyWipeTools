@@ -3,7 +3,7 @@
 ## Notes: Raid alert tool for Lucky Wipe. Shows personal warnings for boss mechanics like fixates and rift assignments. Configurable fonts, sounds, and positioning.
 ## X-Curse-Project-ID: 1498910
 ## Author: Anton
-## Version: 0.1.0
+## Version: @project-version@
 ## SavedVariables: LuckyWipeToolsDB
 ## DefaultState: enabled
 

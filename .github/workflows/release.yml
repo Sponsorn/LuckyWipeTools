@@ -1,0 +1,30 @@
+name: Package and Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set version in TOC
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          sed -i "s/^## Version:.*/## Version: $VERSION/" "LuckyWipeTools.toc"
+
+      - name: Package and release
+        uses: BigWigsMods/packager@v2
+        with:
+          args: -n "{package-name}-${GITHUB_REF_NAME}"
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+          GITHUB_OAUTH: ${{ secrets.GITHUB_TOKEN }}

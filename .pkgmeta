@@ -1,0 +1,4 @@
+package-as: LuckyWipeTools
+
+ignore:
+  - .github
