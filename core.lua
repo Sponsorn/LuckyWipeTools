@@ -51,6 +51,9 @@ LWT.privateAuras = {
     },
 }
 
+-- Gateway Shard config
+LWT.GATEWAY_ITEM_ID = 188152
+
 -- DB setup
 local defaults = {
     alert = {
@@ -60,6 +63,10 @@ local defaults = {
         fontSize = 36,
         fontName = "Friz Quadrata", -- saved by name so it survives list changes
         position = {},  -- { point, x, y }
+    },
+    gateway = {
+        enabled = true,
+        combatOnly = true,
     },
     encounters = {}, -- [key] = true/false, defaults to all enabled
 }
@@ -143,6 +150,7 @@ function LWT:UnregisterAuras() end
 function LWT:FireAlert() end
 function LWT:UpdateAlertFont() end
 function LWT:OpenSettings() end
+function LWT:RefreshGateway() end
 
 -- Main event frame
 local frame = CreateFrame("Frame", "LuckyWipeToolsFrame")

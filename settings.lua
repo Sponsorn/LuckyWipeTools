@@ -268,7 +268,33 @@ for _, config in ipairs(LWT.privateAuras) do
     yOffset = yOffset - 34
 end
 
-yOffset = yOffset - 20
+yOffset = yOffset - 12
+
+-- Section: Gateway
+local gatewayHeader = settingsFrame:CreateFontString("LWT_GatewayHeader", "OVERLAY", "GameFontNormal")
+gatewayHeader:SetPoint("TOPLEFT", 16, yOffset)
+gatewayHeader:SetText("|cffffcc00Gateway Shard|r")
+yOffset = yOffset - 10
+
+CreateCheckbox(settingsFrame, "Gateway Ready alert", 14, yOffset - 22,
+    function() return LWT.db.gateway.enabled end,
+    function(val)
+        LWT.db.gateway.enabled = val
+        LWT:RefreshGateway()
+    end
+)
+yOffset = yOffset - 34
+
+CreateCheckbox(settingsFrame, "Combat only", 14, yOffset - 22,
+    function() return LWT.db.gateway.combatOnly end,
+    function(val)
+        LWT.db.gateway.combatOnly = val
+        LWT:RefreshGateway()
+    end
+)
+yOffset = yOffset - 34
+
+yOffset = yOffset - 12
 
 -- Section: Alert Duration
 CreateSlider(settingsFrame, "Alert Duration (seconds)", 24, yOffset, 1, 10, 0.5,

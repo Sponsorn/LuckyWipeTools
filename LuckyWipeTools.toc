@@ -10,4 +10,5 @@
 core.lua
 alert.lua
 tracker.lua
+gateway.lua
 settings.lua
