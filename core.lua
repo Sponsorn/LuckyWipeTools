@@ -151,6 +151,8 @@ function LWT:FireAlert() end
 function LWT:UpdateAlertFont() end
 function LWT:OpenSettings() end
 function LWT:RefreshGateway() end
+function LWT:PrintDebugLog() end
+function LWT:ClearDebugLog() end
 
 -- Main event frame
 local frame = CreateFrame("Frame", "LuckyWipeToolsFrame")
@@ -176,6 +178,12 @@ SlashCmdList["LUCKYWIPETOOLS"] = function(msg)
         local role = GetSpecializationRole(GetSpecialization())
         local text = role == "HEALER" and "|cff00ff00Go to Triangle|r" or "|cffff2020Go to X|r"
         LWT:FireAlert(text)
+
+    elseif msg == "debug" then
+        LWT:PrintDebugLog()
+
+    elseif msg == "debug clear" then
+        LWT:ClearDebugLog()
 
     else
         LWT:OpenSettings()
