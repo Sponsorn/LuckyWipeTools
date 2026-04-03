@@ -68,6 +68,20 @@ local defaults = {
         enabled = true,
         combatOnly = true,
     },
+    summon = {
+        showPortalPlaced = true,
+        showSummonStarted = true,
+        showStatus = true,
+        showRoster = true,
+    },
+    combatLog = {
+        enabled = false,
+        instanceTypes = {
+            raid = true,
+            party = true,
+        },
+        difficulties = {}, -- [key] = true/false, defaults to all enabled
+    },
     encounters = {}, -- [key] = true/false, defaults to all enabled
 }
 

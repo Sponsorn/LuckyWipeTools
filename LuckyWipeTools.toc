@@ -11,4 +11,6 @@ core.lua
 alert.lua
 tracker.lua
 gateway.lua
+roster.lua
+combatlog.lua
 settings.lua
