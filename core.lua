@@ -24,33 +24,6 @@ function LWT:GetFontList()
     return self.fallbackFonts
 end
 
--- Private aura spell configs
-LWT.privateAuras = {
-    {
-        key = "vorasiusFixate",
-        label = "Vorasius - Fixate (Blistercreep)",
-        spellID = 1254113,
-        encounterID = 3177,
-        getText = function()
-            return "|cffff2020FIXATED ON YOU!|r"
-        end,
-    },
-    {
-        key = "chimaerusRift",
-        label = "Chimaerus - Rift of Madness",
-        spellID = 1264756,
-        encounterID = 3306,
-        getText = function()
-            local role = GetSpecializationRole(GetSpecialization())
-            if role == "HEALER" then
-                return "|cff00ff00Go to Triangle|r"
-            else
-                return "|cffff2020Go to X|r"
-            end
-        end,
-    },
-}
-
 -- Gateway Shard config
 LWT.GATEWAY_ITEM_ID = 188152
 
@@ -74,6 +47,9 @@ local defaults = {
         showStatus = true,
         showRoster = true,
     },
+    itemSplitter = {
+        popupPos = nil,
+    },
     combatLog = {
         enabled = false,
         instanceTypes = {
@@ -81,8 +57,8 @@ local defaults = {
             party = true,
         },
         difficulties = {}, -- [key] = true/false, defaults to all enabled
+        instances = {},     -- [instanceID:difficultyID] = { enabled, name, diffName }
     },
-    encounters = {}, -- [key] = true/false, defaults to all enabled
 }
 
 local function DeepCopyDefaults(src, dst)
@@ -104,11 +80,6 @@ function LWT:SetupDB()
     DeepCopyDefaults(defaults, self.db)
 end
 
-function LWT:IsEncounterEnabled(key)
-    -- Default to enabled if not explicitly set
-    if self.db.encounters[key] == nil then return true end
-    return self.db.encounters[key]
-end
 
 function LWT:GetFont()
     local fontName = self.db.alert.fontName or "Friz Quadrata"
@@ -159,14 +130,10 @@ function LWT:Print(msg)
 end
 
 -- Stub functions (overridden by other files as they load)
-function LWT:RegisterAuras() end
-function LWT:UnregisterAuras() end
 function LWT:FireAlert() end
 function LWT:UpdateAlertFont() end
 function LWT:OpenSettings() end
 function LWT:RefreshGateway() end
-function LWT:PrintDebugLog() end
-function LWT:ClearDebugLog() end
 
 -- Main event frame
 local frame = CreateFrame("Frame", "LuckyWipeToolsFrame")
@@ -193,11 +160,11 @@ SlashCmdList["LUCKYWIPETOOLS"] = function(msg)
         local text = role == "HEALER" and "|cff00ff00Go to Triangle|r" or "|cffff2020Go to X|r"
         LWT:FireAlert(text)
 
-    elseif msg == "debug" then
-        LWT:PrintDebugLog()
+    elseif msg == "split" then
+        LWT:ToggleSplitter()
 
-    elseif msg == "debug clear" then
-        LWT:ClearDebugLog()
+    elseif msg == "log" then
+        LWT:ToggleInstanceLogging()
 
     else
         LWT:OpenSettings()

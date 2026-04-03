@@ -1,83 +1,147 @@
 local ADDON_NAME, LWT = ...
 
 -- =========================================================
--- Dimensions
+-- Dimensions & Colors
 -- =========================================================
 local PANEL_WIDTH = 600
 local PANEL_HEIGHT = 500
 local SIDEBAR_WIDTH = 140
 
+local FLAT = "Interface\\Buttons\\WHITE8x8"
+local BG_COLOR = { 0.05, 0.05, 0.07, 0.92 }
+local BORDER_COLOR = { 0.15, 0.15, 0.18, 1 }
+local SIDEBAR_BG = { 0.04, 0.04, 0.06, 1 }
+local SIDEBAR_SEL = { 1, 0.82, 0, 0.08 }
+local SIDEBAR_HL = { 1, 1, 1, 0.03 }
+local ACCENT = { 1, 0.82, 0 }
+local TEXT_DIM = { 0.55, 0.55, 0.55 }
+local HEADER_COLOR = { 1, 0.82, 0 }
+
 -- =========================================================
--- Helpers
+-- Flat backdrop helper
 -- =========================================================
-local function CreateStyledButton(name, parent, width, height)
+local function FlatBackdrop(frame, bg, border)
+    frame:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
+    frame:SetBackdropColor(unpack(bg or BG_COLOR))
+    frame:SetBackdropBorderColor(unpack(border or BORDER_COLOR))
+end
+
+-- =========================================================
+-- Widget: Flat button
+-- =========================================================
+local function CreateButton(name, parent, width, height)
     local btn = CreateFrame("Button", name, parent, "BackdropTemplate")
     btn:SetSize(width, height)
-    btn:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 },
-    })
-    btn:SetBackdropColor(0.2, 0.2, 0.2, 1)
-    btn:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+    FlatBackdrop(btn, { 0.12, 0.12, 0.14, 1 }, { 0.25, 0.25, 0.28, 1 })
 
-    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    text:SetPoint("CENTER")
-    btn.text = text
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    btn.text:SetPoint("CENTER")
 
     btn.SetText = function(self, str) self.text:SetText(str) end
     btn.GetText = function(self) return self.text:GetText() end
 
     btn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.3, 0.3, 0.3, 1)
-        self:SetBackdropBorderColor(0.7, 0.7, 0.7, 1)
+        self:SetBackdropColor(0.18, 0.18, 0.20, 1)
+        self:SetBackdropBorderColor(0.4, 0.4, 0.45, 1)
     end)
     btn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.2, 0.2, 0.2, 1)
-        self:SetBackdropBorderColor(0.5, 0.5, 0.5, 1)
+        self:SetBackdropColor(0.12, 0.12, 0.14, 1)
+        self:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
     end)
 
     return btn
 end
 
+-- =========================================================
+-- Widget: Flat checkbox (custom drawn)
+-- =========================================================
 local checkboxCount = 0
 local function CreateCheckbox(parent, label, x, y, getFunc, setFunc)
     checkboxCount = checkboxCount + 1
-    local cb = CreateFrame("CheckButton", "LWT_Check_" .. checkboxCount, parent, "UICheckButtonTemplate")
-    cb:SetPoint("TOPLEFT", x, y)
 
-    local text = cb:GetFontString() or cb:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    if not cb:GetFontString() then
-        text:SetPoint("LEFT", cb, "RIGHT", 4, 0)
-        cb:SetFontString(text)
-    end
+    local btn = CreateFrame("Button", "LWT_Check_" .. checkboxCount, parent)
+    btn:SetSize(200, 20)
+    btn:SetPoint("TOPLEFT", x, y)
+
+    -- Box
+    local box = CreateFrame("Frame", nil, btn, "BackdropTemplate")
+    box:SetSize(16, 16)
+    box:SetPoint("LEFT", 0, 0)
+    FlatBackdrop(box, { 0.08, 0.08, 0.10, 1 }, { 0.3, 0.3, 0.35, 1 })
+    btn.box = box
+
+    -- Checkmark
+    local check = box:CreateTexture(nil, "OVERLAY")
+    check:SetSize(12, 12)
+    check:SetPoint("CENTER")
+    check:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 1)
+    check:Hide()
+    btn.check = check
+
+    -- Label
+    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    text:SetPoint("LEFT", box, "RIGHT", 6, 0)
     text:SetText(label)
-    text:SetFontObject("GameFontHighlight")
+    btn.label = text
 
-    cb:SetScript("OnShow", function(self) self:SetChecked(getFunc()) end)
-    cb:SetScript("OnClick", function(self) setFunc(self:GetChecked()) end)
+    local function Refresh()
+        if getFunc() then
+            check:Show()
+            box:SetBackdropBorderColor(ACCENT[1], ACCENT[2], ACCENT[3], 0.6)
+        else
+            check:Hide()
+            box:SetBackdropBorderColor(0.3, 0.3, 0.35, 1)
+        end
+    end
 
-    return cb
+    btn:SetScript("OnShow", Refresh)
+    btn:SetScript("OnClick", function()
+        setFunc(not getFunc())
+        Refresh()
+    end)
+
+    btn:SetScript("OnEnter", function()
+        box:SetBackdropColor(0.12, 0.12, 0.15, 1)
+    end)
+    btn:SetScript("OnLeave", function()
+        box:SetBackdropColor(0.08, 0.08, 0.10, 1)
+    end)
+
+    return btn
 end
 
+-- =========================================================
+-- Widget: Flat slider
+-- =========================================================
 local sliderCount = 0
 local function CreateSlider(parent, label, x, y, minVal, maxVal, step, getFunc, setFunc)
     sliderCount = sliderCount + 1
-    local slider = CreateFrame("Slider", "LWT_Slider_" .. sliderCount, parent, "OptionsSliderTemplate")
-    slider:SetPoint("TOPLEFT", x, y)
-    slider:SetWidth(200)
+
+    local wrapper = CreateFrame("Frame", nil, parent)
+    wrapper:SetSize(280, 40)
+    wrapper:SetPoint("TOPLEFT", x, y)
+
+    local title = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    title:SetPoint("TOPLEFT", 0, 0)
+    title:SetText(label)
+
+    local valueText = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    valueText:SetPoint("TOPRIGHT", 0, 0)
+    valueText:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
+
+    local slider = CreateFrame("Slider", "LWT_Slider_" .. sliderCount, wrapper, "BackdropTemplate")
+    slider:SetSize(280, 12)
+    slider:SetPoint("TOPLEFT", 0, -16)
+    FlatBackdrop(slider, { 0.08, 0.08, 0.10, 1 }, { 0.25, 0.25, 0.28, 1 })
     slider:SetMinMaxValues(minVal, maxVal)
     slider:SetValueStep(step)
     slider:SetObeyStepOnDrag(true)
 
-    local sliderName = slider:GetName()
-    _G[sliderName .. "Text"]:SetText(label)
-    _G[sliderName .. "Low"]:SetText(minVal)
-    _G[sliderName .. "High"]:SetText(maxVal)
-
-    local valueText = slider:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    valueText:SetPoint("TOP", slider, "BOTTOM", 0, 0)
+    -- Thumb
+    local thumb = slider:CreateTexture(nil, "OVERLAY")
+    thumb:SetSize(14, 14)
+    thumb:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 0.9)
+    slider:SetThumbTexture(thumb)
 
     slider:SetScript("OnShow", function(self)
         local val = getFunc()
@@ -90,46 +154,65 @@ local function CreateSlider(parent, label, x, y, minVal, maxVal, step, getFunc, 
         setFunc(val)
     end)
 
-    return slider
+    -- Mouse wheel support
+    slider:EnableMouseWheel(true)
+    slider:SetScript("OnMouseWheel", function(self, delta)
+        local val = self:GetValue() + (delta * step)
+        val = math.max(minVal, math.min(maxVal, val))
+        self:SetValue(val)
+    end)
+
+    return wrapper
 end
 
+-- =========================================================
+-- Widget: Flat dropdown picker
+-- =========================================================
 local pickerCount = 0
 local activePicker = nil
 
-local function CreateScrollPicker(parent, label, x, y, getItemsFunc, getFunc, setFunc)
+local function CreateDropdown(parent, label, x, y, getItemsFunc, getFunc, setFunc)
     pickerCount = pickerCount + 1
     local id = pickerCount
 
-    local pickerLabel = parent:CreateFontString("LWT_PickerLabel_" .. id, "OVERLAY", "GameFontNormal")
-    pickerLabel:SetPoint("TOPLEFT", x, y)
-    pickerLabel:SetText(label)
+    local wrapper = CreateFrame("Frame", nil, parent)
+    wrapper:SetSize(280, 38)
+    wrapper:SetPoint("TOPLEFT", x, y)
 
-    local btn = CreateStyledButton("LWT_PickerBtn_" .. id, parent, 200, 22)
-    btn:SetPoint("TOPLEFT", x, y - 16)
-    btn.text:SetJustifyH("LEFT")
-    btn.text:ClearAllPoints()
+    local title = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    title:SetPoint("TOPLEFT", 0, 0)
+    title:SetText(label)
+
+    local btn = CreateFrame("Button", "LWT_Drop_" .. id, wrapper, "BackdropTemplate")
+    btn:SetSize(280, 22)
+    btn:SetPoint("TOPLEFT", 0, -14)
+    FlatBackdrop(btn, { 0.08, 0.08, 0.10, 1 }, { 0.25, 0.25, 0.28, 1 })
+
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     btn.text:SetPoint("LEFT", 8, 0)
-    btn.text:SetPoint("RIGHT", -8, 0)
+    btn.text:SetPoint("RIGHT", -20, 0)
+    btn.text:SetJustifyH("LEFT")
 
-    local popup = CreateFrame("Frame", "LWT_PickerPopup_" .. id, UIParent, "BackdropTemplate")
-    popup:SetSize(220, 200)
-    popup:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 16,
-        insets = { left = 4, right = 4, top = 4, bottom = 4 },
-    })
-    popup:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
+    -- Arrow
+    local arrow = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    arrow:SetPoint("RIGHT", -6, 0)
+    arrow:SetText("v")
+    arrow:SetTextColor(0.5, 0.5, 0.5)
+
+    -- Popup
+    local popup = CreateFrame("Frame", "LWT_DropPopup_" .. id, UIParent, "BackdropTemplate")
+    popup:SetSize(280, 200)
+    FlatBackdrop(popup, { 0.06, 0.06, 0.08, 0.98 }, BORDER_COLOR)
     popup:SetFrameStrata("FULLSCREEN_DIALOG")
     popup:SetClampedToScreen(true)
     popup:Hide()
 
-    local scrollFrame = CreateFrame("ScrollFrame", "LWT_PickerScroll_" .. id, popup, "UIPanelScrollFrameTemplate")
-    scrollFrame:SetPoint("TOPLEFT", 6, -6)
-    scrollFrame:SetPoint("BOTTOMRIGHT", -28, 6)
+    local scrollFrame = CreateFrame("ScrollFrame", "LWT_DropScroll_" .. id, popup, "UIPanelScrollFrameTemplate")
+    scrollFrame:SetPoint("TOPLEFT", 2, -2)
+    scrollFrame:SetPoint("BOTTOMRIGHT", -20, 2)
 
-    local scrollChild = CreateFrame("Frame", "LWT_PickerScrollChild_" .. id, scrollFrame)
-    scrollChild:SetWidth(184)
+    local scrollChild = CreateFrame("Frame", "LWT_DropChild_" .. id, scrollFrame)
+    scrollChild:SetWidth(256)
     scrollFrame:SetScrollChild(scrollChild)
 
     local rowPool = {}
@@ -139,38 +222,38 @@ local function CreateScrollPicker(parent, label, x, y, getItemsFunc, getFunc, se
         if not LWT.db then return end
         local items = getItemsFunc()
         local current = getFunc()
-        local rowHeight = 18
+        local rowHeight = 20
 
         for i, item in ipairs(items) do
             local row = rowPool[i]
             if not row then
-                row = CreateFrame("Button", "LWT_PickerRow_" .. id .. "_" .. i, scrollChild)
+                row = CreateFrame("Button", nil, scrollChild)
                 row:SetHeight(rowHeight)
                 row:SetPoint("TOPLEFT", 0, -(i - 1) * rowHeight)
                 row:SetPoint("RIGHT")
 
                 row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-                row.text:SetPoint("LEFT", 4, 0)
-                row.text:SetPoint("RIGHT", -4, 0)
+                row.text:SetPoint("LEFT", 8, 0)
+                row.text:SetPoint("RIGHT", -8, 0)
                 row.text:SetJustifyH("LEFT")
 
-                row.highlight = row:CreateTexture(nil, "HIGHLIGHT")
-                row.highlight:SetAllPoints()
-                row.highlight:SetColorTexture(1, 1, 1, 0.1)
+                row.hl = row:CreateTexture(nil, "HIGHLIGHT")
+                row.hl:SetAllPoints()
+                row.hl:SetColorTexture(1, 1, 1, 0.06)
 
-                row.selected = row:CreateTexture(nil, "BACKGROUND")
-                row.selected:SetAllPoints()
-                row.selected:SetColorTexture(0.3, 0.6, 1, 0.2)
+                row.sel = row:CreateTexture(nil, "BACKGROUND")
+                row.sel:SetAllPoints()
+                row.sel:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 0.12)
 
                 rowPool[i] = row
             end
 
             row.text:SetText(item.name)
-            row.selected:SetShown(item.name == current)
+            row.sel:SetShown(item.name == current)
 
             row:SetScript("OnClick", function()
                 setFunc(item.name)
-                btn:SetText(item.name)
+                btn.text:SetText(item.name)
                 popup:Hide()
                 activePicker = nil
             end)
@@ -190,7 +273,7 @@ local function CreateScrollPicker(parent, label, x, y, getItemsFunc, getFunc, se
             activePicker = nil
         else
             popup:ClearAllPoints()
-            popup:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -2)
+            popup:SetPoint("TOPLEFT", btn, "BOTTOMLEFT", 0, -1)
             Populate()
             popup:Show()
             activePicker = popup
@@ -198,7 +281,14 @@ local function CreateScrollPicker(parent, label, x, y, getItemsFunc, getFunc, se
     end)
 
     btn:SetScript("OnShow", function()
-        btn:SetText(getFunc() or "Default")
+        btn.text:SetText(getFunc() or "Default")
+    end)
+
+    btn:SetScript("OnEnter", function(self)
+        self:SetBackdropBorderColor(0.4, 0.4, 0.45, 1)
+    end)
+    btn:SetScript("OnLeave", function(self)
+        self:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
     end)
 
     parent:HookScript("OnHide", function()
@@ -206,7 +296,25 @@ local function CreateScrollPicker(parent, label, x, y, getItemsFunc, getFunc, se
         activePicker = nil
     end)
 
-    return btn
+    return wrapper
+end
+
+-- =========================================================
+-- Widget: Section header
+-- =========================================================
+local function CreateHeader(parent, text, x, y)
+    local line = parent:CreateTexture(nil, "ARTWORK")
+    line:SetHeight(1)
+    line:SetPoint("TOPLEFT", x, y - 6)
+    line:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
+    line:SetColorTexture(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3], 0.2)
+
+    local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    label:SetPoint("TOPLEFT", x, y - 10)
+    label:SetText(text)
+    label:SetTextColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
+
+    return label
 end
 
 -- =========================================================
@@ -215,13 +323,7 @@ end
 local settingsFrame = CreateFrame("Frame", "LWT_SettingsFrame", UIParent, "BackdropTemplate")
 settingsFrame:SetSize(PANEL_WIDTH, PANEL_HEIGHT)
 settingsFrame:SetPoint("CENTER")
-settingsFrame:SetBackdrop({
-    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-    tile = true, tileSize = 16, edgeSize = 16,
-    insets = { left = 4, right = 4, top = 4, bottom = 4 },
-})
-settingsFrame:SetBackdropColor(0.1, 0.1, 0.1, 0.95)
+FlatBackdrop(settingsFrame, BG_COLOR, BORDER_COLOR)
 settingsFrame:SetMovable(true)
 settingsFrame:EnableMouse(true)
 settingsFrame:RegisterForDrag("LeftButton")
@@ -233,27 +335,49 @@ settingsFrame:Hide()
 
 tinsert(UISpecialFrames, "LWT_SettingsFrame")
 
--- Title
-local title = settingsFrame:CreateFontString("LWT_SettingsTitle", "OVERLAY", "GameFontNormalLarge")
-title:SetPoint("TOP", 0, -12)
+-- Title bar
+local titleBar = CreateFrame("Frame", nil, settingsFrame)
+titleBar:SetHeight(28)
+titleBar:SetPoint("TOPLEFT", 1, -1)
+titleBar:SetPoint("TOPRIGHT", -1, -1)
+
+local titleBg = titleBar:CreateTexture(nil, "BACKGROUND")
+titleBg:SetAllPoints()
+titleBg:SetColorTexture(0.08, 0.08, 0.10, 1)
+
+local title = titleBar:CreateFontString("LWT_SettingsTitle", "OVERLAY", "GameFontNormal")
+title:SetPoint("LEFT", 12, 0)
 title:SetText("LuckyWipeTools")
+title:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
 
 -- Close button
-local closeBtn = CreateFrame("Button", "LWT_SettingsCloseBtn", settingsFrame, "UIPanelCloseButton")
-closeBtn:SetPoint("TOPRIGHT", -4, -4)
+local closeBtn = CreateFrame("Button", "LWT_SettingsCloseBtn", titleBar)
+closeBtn:SetSize(28, 28)
+closeBtn:SetPoint("RIGHT", -2, 0)
+closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+closeBtn.text:SetPoint("CENTER", 0, 0)
+closeBtn.text:SetText("x")
+closeBtn.text:SetTextColor(0.5, 0.5, 0.5)
+closeBtn:SetScript("OnEnter", function(self) self.text:SetTextColor(1, 0.3, 0.3) end)
+closeBtn:SetScript("OnLeave", function(self) self.text:SetTextColor(0.5, 0.5, 0.5) end)
+closeBtn:SetScript("OnClick", function() settingsFrame:Hide() end)
 
 -- =========================================================
 -- Sidebar
 -- =========================================================
-local sidebar = CreateFrame("Frame", "LWT_Sidebar", settingsFrame)
-sidebar:SetPoint("TOPLEFT", 8, -36)
-sidebar:SetSize(SIDEBAR_WIDTH, PANEL_HEIGHT - 44)
+local sidebar = CreateFrame("Frame", "LWT_Sidebar", settingsFrame, "BackdropTemplate")
+sidebar:SetPoint("TOPLEFT", 1, -29)
+sidebar:SetPoint("BOTTOMLEFT", 1, 1)
+sidebar:SetWidth(SIDEBAR_WIDTH)
+sidebar:SetBackdrop({ bgFile = FLAT })
+sidebar:SetBackdropColor(unpack(SIDEBAR_BG))
 
--- Separator line
+-- Separator
 local sep = settingsFrame:CreateTexture("LWT_SidebarSep", "ARTWORK")
-sep:SetColorTexture(0.3, 0.3, 0.3, 0.6)
-sep:SetSize(1, PANEL_HEIGHT - 44)
-sep:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 4, 0)
+sep:SetWidth(1)
+sep:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 0, 0)
+sep:SetPoint("BOTTOMLEFT", sidebar, "BOTTOMRIGHT", 0, 0)
+sep:SetColorTexture(BORDER_COLOR[1], BORDER_COLOR[2], BORDER_COLOR[3], 1)
 
 -- =========================================================
 -- Page system
@@ -261,32 +385,29 @@ sep:SetPoint("TOPLEFT", sidebar, "TOPRIGHT", 4, 0)
 local pages = {}
 local sidebarButtons = {}
 local currentPage = nil
+local currentKey = nil
 
-local CONTENT_WIDTH = PANEL_WIDTH - SIDEBAR_WIDTH - 32
-local CONTENT_HEIGHT = PANEL_HEIGHT - 44
+local CONTENT_WIDTH = PANEL_WIDTH - SIDEBAR_WIDTH - 24
+local CONTENT_HEIGHT = PANEL_HEIGHT - 30
 
 local function CreatePage(key)
-    -- Outer container
     local container = CreateFrame("Frame", "LWT_Page_" .. key, settingsFrame)
-    container:SetPoint("TOPLEFT", sep, "TOPRIGHT", 8, 0)
-    container:SetSize(CONTENT_WIDTH + 8, CONTENT_HEIGHT)
+    container:SetPoint("TOPLEFT", sep, "TOPRIGHT", 8, -8)
+    container:SetSize(CONTENT_WIDTH + 8, CONTENT_HEIGHT - 8)
     container:Hide()
 
-    -- Scroll frame
     local scroll = CreateFrame("ScrollFrame", "LWT_PageScroll_" .. key, container, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", 0, 0)
     scroll:SetPoint("BOTTOMRIGHT", -24, 0)
 
-    -- Scroll child (this is what content goes into)
     local content = CreateFrame("Frame", "LWT_PageContent_" .. key, scroll)
     content:SetWidth(CONTENT_WIDTH - 8)
     scroll:SetScrollChild(content)
 
-    -- SetContentHeight must be called after populating
     container.content = content
     container.scroll = scroll
     container.SetContentHeight = function(_, h)
-        content:SetHeight(math.max(h, CONTENT_HEIGHT))
+        content:SetHeight(math.max(h, CONTENT_HEIGHT - 8))
     end
 
     pages[key] = container
@@ -296,65 +417,59 @@ end
 local function ShowPage(key)
     if currentPage then currentPage:Hide() end
     currentPage = pages[key]
+    currentKey = key
     if currentPage then currentPage:Show() end
-    -- Update sidebar highlights
     for k, btn in pairs(sidebarButtons) do
         if k == key then
-            btn:SetBackdropColor(0.3, 0.6, 1, 0.15)
-            btn.text:SetTextColor(1, 0.82, 0)
+            btn.bg:SetColorTexture(SIDEBAR_SEL[1], SIDEBAR_SEL[2], SIDEBAR_SEL[3], SIDEBAR_SEL[4])
+            btn.text:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
+            btn.indicator:Show()
         else
-            btn:SetBackdropColor(0, 0, 0, 0)
-            btn.text:SetTextColor(0.8, 0.8, 0.8)
+            btn.bg:SetColorTexture(0, 0, 0, 0)
+            btn.text:SetTextColor(0.7, 0.7, 0.7)
+            btn.indicator:Hide()
         end
     end
 end
 
-local sidebarY = 0
+local sidebarY = 4
 local function AddSidebarButton(key, label)
-    local btn = CreateFrame("Button", "LWT_SideBtn_" .. key, sidebar, "BackdropTemplate")
-    btn:SetSize(SIDEBAR_WIDTH, 24)
+    local btn = CreateFrame("Button", "LWT_SideBtn_" .. key, sidebar)
+    btn:SetSize(SIDEBAR_WIDTH, 26)
     btn:SetPoint("TOPLEFT", 0, -sidebarY)
-    btn:SetBackdrop({ bgFile = "Interface/Tooltips/UI-Tooltip-Background" })
-    btn:SetBackdropColor(0, 0, 0, 0)
 
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    btn.text:SetPoint("LEFT", 8, 0)
+    btn.bg = btn:CreateTexture(nil, "BACKGROUND")
+    btn.bg:SetAllPoints()
+    btn.bg:SetColorTexture(0, 0, 0, 0)
+
+    -- Left accent indicator
+    btn.indicator = btn:CreateTexture(nil, "OVERLAY")
+    btn.indicator:SetSize(2, 16)
+    btn.indicator:SetPoint("LEFT", 2, 0)
+    btn.indicator:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 1)
+    btn.indicator:Hide()
+
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    btn.text:SetPoint("LEFT", 12, 0)
     btn.text:SetText(label)
     btn.text:SetJustifyH("LEFT")
+    btn.text:SetTextColor(0.7, 0.7, 0.7)
 
     btn:SetScript("OnEnter", function(self)
-        if currentPage ~= pages[key] then
-            self:SetBackdropColor(1, 1, 1, 0.05)
+        if currentKey ~= key then
+            self.bg:SetColorTexture(SIDEBAR_HL[1], SIDEBAR_HL[2], SIDEBAR_HL[3], SIDEBAR_HL[4])
         end
     end)
     btn:SetScript("OnLeave", function(self)
-        if currentPage ~= pages[key] then
-            self:SetBackdropColor(0, 0, 0, 0)
+        if currentKey ~= key then
+            self.bg:SetColorTexture(0, 0, 0, 0)
         end
     end)
     btn:SetScript("OnClick", function() ShowPage(key) end)
 
     sidebarButtons[key] = btn
-    sidebarY = sidebarY + 24
+    sidebarY = sidebarY + 26
     return btn
-end
-
--- =========================================================
--- Page: Encounters
--- =========================================================
-AddSidebarButton("encounters", "Encounters")
-local encounterPage = CreatePage("encounters")
-do
-    local c = encounterPage.content
-    local y = -4
-    for _, config in ipairs(LWT.privateAuras) do
-        CreateCheckbox(c, config.label, 4, y,
-            function() return LWT:IsEncounterEnabled(config.key) end,
-            function(val) LWT.db.encounters[config.key] = val end
-        )
-        y = y - 30
-    end
-    encounterPage:SetContentHeight(math.abs(y) + 10)
 end
 
 -- =========================================================
@@ -367,22 +482,23 @@ local moveBtn, testBtn
 do
     local c = alertPage.content
     local y = -4
-    CreateSlider(c, "Alert Duration (seconds)", 12, y, 1, 10, 0.5,
+
+    CreateSlider(c, "Duration (seconds)", 8, y, 1, 10, 0.5,
         function() return LWT.db.alert.duration end,
         function(val) LWT.db.alert.duration = val end
     )
-    y = y - 60
+    y = y - 52
 
-    CreateSlider(c, "Font Size", 12, y, 16, 72, 2,
+    CreateSlider(c, "Font Size", 8, y, 16, 72, 2,
         function() return LWT.db.alert.fontSize end,
         function(val)
             LWT.db.alert.fontSize = val
             LWT:UpdateAlertFont()
         end
     )
-    y = y - 60
+    y = y - 52
 
-    CreateScrollPicker(c, "Font", 8, y,
+    CreateDropdown(c, "Font", 8, y,
         function() return LWT:GetFontList() end,
         function() return LWT.db.alert.fontName end,
         function(name)
@@ -390,9 +506,9 @@ do
             LWT:UpdateAlertFont()
         end
     )
-    y = y - 50
+    y = y - 48
 
-    CreateScrollPicker(c, "Alert Sound", 8, y,
+    CreateDropdown(c, "Sound", 8, y,
         function() return LWT:GetSoundList() end,
         function() return LWT.db.alert.soundName or "None" end,
         function(name)
@@ -405,27 +521,29 @@ do
             end
             local soundPath = LWT:GetSoundFile()
             if soundPath then PlaySoundFile(soundPath, "Master") end
-            LWT:RefreshAuras()
-        end
+            end
     )
-    y = y - 60
+    y = y - 56
 
-    moveBtn = CreateStyledButton("LWT_MoveBtn", c, 120, 26)
+    CreateHeader(c, "Position", 8, y)
+    y = y - 24
+
+    moveBtn = CreateButton("LWT_MoveBtn", c, 130, 24)
     moveBtn:SetPoint("TOPLEFT", 8, y)
-    moveBtn:SetText("Unlock Alert")
+    moveBtn:SetText("Unlock Position")
 
-    testBtn = CreateStyledButton("LWT_TestBtn", c, 120, 26)
-    testBtn:SetPoint("LEFT", moveBtn, "RIGHT", 10, 0)
+    testBtn = CreateButton("LWT_TestBtn", c, 130, 24)
+    testBtn:SetPoint("LEFT", moveBtn, "RIGHT", 8, 0)
     testBtn:SetText("Test Alert")
 
     moveBtn:SetScript("OnClick", function()
         if moverActive then
             LWT:DisableMover()
-            moveBtn:SetText("Unlock Alert")
+            moveBtn:SetText("Unlock Position")
             moverActive = false
         else
             LWT:EnableMover()
-            moveBtn:SetText("Lock Alert")
+            moveBtn:SetText("Lock Position")
             moverActive = true
         end
     end)
@@ -433,13 +551,13 @@ do
     testBtn:SetScript("OnClick", function()
         if moverActive then
             LWT:DisableMover()
-            moveBtn:SetText("Unlock Alert")
+            moveBtn:SetText("Unlock Position")
             moverActive = false
         end
         LWT:FireAlert("|cffff2020FIXATED ON YOU!|r")
     end)
 
-    y = y - 36
+    y = y - 34
     alertPage:SetContentHeight(math.abs(y) + 10)
 end
 
@@ -458,7 +576,7 @@ do
             LWT:RefreshGateway()
         end
     )
-    y = y - 30
+    y = y - 26
 
     CreateCheckbox(c, "Combat only", 4, y,
         function() return LWT.db.gateway.combatOnly end,
@@ -467,7 +585,7 @@ do
             LWT:RefreshGateway()
         end
     )
-    y = y - 30
+    y = y - 26
     gatewayPage:SetContentHeight(math.abs(y) + 10)
 end
 
@@ -485,15 +603,13 @@ do
     desc:SetWidth(CONTENT_WIDTH - 24)
     desc:SetJustifyH("LEFT")
     desc:SetText("Tracks summoning portal placement and summon status for raid members. Shows a roster of players outside your zone.")
-    desc:SetTextColor(0.6, 0.6, 0.6)
-    y = y - (desc:GetStringHeight() + 12)
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
 
-    local header1 = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    header1:SetPoint("TOPLEFT", 4, y)
-    header1:SetText("|cffffcc00Notifications|r")
-    y = y - 20
+    CreateHeader(c, "Notifications", 4, y)
+    y = y - 24
 
-    CreateCheckbox(c, "Portal placed notification", 4, y,
+    CreateCheckbox(c, "Portal placed", 4, y,
         function()
             return not LWT.db.summon or LWT.db.summon.showPortalPlaced ~= false
         end,
@@ -502,9 +618,9 @@ do
             LWT.db.summon.showPortalPlaced = val
         end
     )
-    y = y - 28
+    y = y - 24
 
-    CreateCheckbox(c, "Summon started notification", 4, y,
+    CreateCheckbox(c, "Summon started", 4, y,
         function()
             return not LWT.db.summon or LWT.db.summon.showSummonStarted ~= false
         end,
@@ -513,9 +629,9 @@ do
             LWT.db.summon.showSummonStarted = val
         end
     )
-    y = y - 28
+    y = y - 24
 
-    CreateCheckbox(c, "Accepted / Declined notification", 4, y,
+    CreateCheckbox(c, "Accepted / Declined", 4, y,
         function()
             return not LWT.db.summon or LWT.db.summon.showStatus ~= false
         end,
@@ -524,12 +640,10 @@ do
             LWT.db.summon.showStatus = val
         end
     )
-    y = y - 34
+    y = y - 30
 
-    local header2 = c:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    header2:SetPoint("TOPLEFT", 4, y)
-    header2:SetText("|cffffcc00Outside Roster|r")
-    y = y - 20
+    CreateHeader(c, "Outside Roster", 4, y)
+    y = y - 24
 
     CreateCheckbox(c, "Show roster frame", 4, y,
         function()
@@ -540,7 +654,7 @@ do
             LWT.db.summon.showRoster = val
         end
     )
-    y = y - 28
+    y = y - 24
 
     summonPage:SetContentHeight(math.abs(y) + 10)
 end
@@ -557,31 +671,25 @@ do
         function() return LWT.db.combatLog.enabled end,
         function(val) LWT.db.combatLog.enabled = val end
     )
-    y = y - 34
+    y = y - 30
 
-    local clTypeLabel = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    clTypeLabel:SetPoint("TOPLEFT", 20, y)
-    clTypeLabel:SetText("Instance types:")
-    clTypeLabel:SetTextColor(0.7, 0.7, 0.7)
-    y = y - 18
+    CreateHeader(c, "Instance Types", 4, y)
+    y = y - 24
 
     for _, itype in ipairs(LWT.combatLogInstanceTypes) do
-        CreateCheckbox(c, itype.label, 20, y,
+        CreateCheckbox(c, itype.label, 16, y,
             function() return LWT.db.combatLog.instanceTypes[itype.key] end,
             function(val) LWT.db.combatLog.instanceTypes[itype.key] = val end
         )
-        y = y - 26
+        y = y - 24
     end
 
-    y = y - 8
-    local clDiffLabel = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    clDiffLabel:SetPoint("TOPLEFT", 20, y)
-    clDiffLabel:SetText("Difficulties:")
-    clDiffLabel:SetTextColor(0.7, 0.7, 0.7)
-    y = y - 18
+    y = y - 6
+    CreateHeader(c, "Difficulties", 4, y)
+    y = y - 24
 
     for _, diff in ipairs(LWT.combatLogDifficulties) do
-        CreateCheckbox(c, diff.label, 20, y,
+        CreateCheckbox(c, diff.label, 16, y,
             function()
                 local val = LWT.db.combatLog.difficulties[diff.key]
                 if val == nil then return true end
@@ -589,26 +697,71 @@ do
             end,
             function(val) LWT.db.combatLog.difficulties[diff.key] = val end
         )
-        y = y - 26
+        y = y - 24
     end
 
     combatLogPage:SetContentHeight(math.abs(y) + 10)
 end
 
 -- =========================================================
--- Lock mover on close, default page
+-- Page: Item Splitter
+-- =========================================================
+AddSidebarButton("splitter", "Item Splitter")
+local splitterPage = CreatePage("splitter")
+do
+    local c = splitterPage.content
+    local y = -4
+
+    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    desc:SetPoint("TOPLEFT", 8, y)
+    desc:SetWidth(CONTENT_WIDTH - 24)
+    desc:SetJustifyH("LEFT")
+    desc:SetText("Split item stacks into smaller stacks for distribution. Works with personal bags and guild bank. A Split button also appears on the guild bank frame.")
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
+
+    CreateHeader(c, "Usage", 4, y)
+    y = y - 24
+
+    local usage = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    usage:SetPoint("TOPLEFT", 8, y)
+    usage:SetWidth(CONTENT_WIDTH - 24)
+    usage:SetJustifyH("LEFT")
+    usage:SetText(
+        "|cffffcc00/lwt split|r -- Open the splitter popup\n\n" ..
+        "1. Drag an item stack onto the drop slot\n" ..
+        "2. Enter the target stack size (e.g., 1 for individual items)\n" ..
+        "3. Click Split to auto-split the entire stack\n\n" ..
+        "A |cffffcc00Split|r button also appears on the guild bank frame."
+    )
+    usage:SetTextColor(0.7, 0.7, 0.7)
+    y = y - (usage:GetStringHeight() + 14)
+
+    local openBtn = CreateButton("LWT_OpenSplitter", c, 140, 26)
+    openBtn:SetPoint("TOPLEFT", 8, y)
+    openBtn:SetText("Open Splitter")
+    openBtn:SetScript("OnClick", function()
+        LWT:ToggleSplitter()
+    end)
+    y = y - 36
+
+    splitterPage:SetContentHeight(math.abs(y) + 10)
+end
+
+-- =========================================================
+-- Events
 -- =========================================================
 settingsFrame:SetScript("OnHide", function()
     if moverActive then
         LWT:DisableMover()
-        moveBtn:SetText("Unlock Alert")
+        moveBtn:SetText("Unlock Position")
         moverActive = false
     end
 end)
 
 settingsFrame:SetScript("OnShow", function()
     if not currentPage then
-        ShowPage("encounters")
+        ShowPage("alert")
     end
 end)
 
