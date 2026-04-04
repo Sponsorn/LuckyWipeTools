@@ -11,6 +11,7 @@ core.lua
 alert.lua
 gateway.lua
 roster.lua
+vantus.lua
 combatlog.lua
 itemsplitter.lua
 settings.lua
