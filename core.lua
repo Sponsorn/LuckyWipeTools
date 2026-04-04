@@ -65,6 +65,7 @@ local defaults = {
     lastVersionCheck = nil,
     tracker = {
         enabled = true,
+        nameplateFontSize = 14,
         alert = ALERT_DEFAULTS,
     },
     gateway = {

@@ -676,6 +676,20 @@ do
     )
     y = y - 30
 
+    CreateHeader(c, "Nameplates", 4, y)
+    y = y - 24
+
+    CreateSlider(c, "Nameplate Font Size", 8, y, 8, 30, 1,
+        function() return LWT.db.tracker.nameplateFontSize end,
+        function(val)
+            LWT.db.tracker.nameplateFontSize = val
+            if LWT.RefreshTrackerFontSize then
+                LWT:RefreshTrackerFontSize()
+            end
+        end
+    )
+    y = y - 52
+
     local endY, trackerCleanup = AddAlertDisplayWidgets(
         c, y,
         function() return LWT.db.tracker.alert end,

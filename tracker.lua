@@ -43,14 +43,29 @@ local function GetOrCreateText(anchorFrame)
         return nameplateTexts[anchorFrame]
     end
 
+    local db = GetDB()
+    local fontSize = db.nameplateFontSize or 14
     local text = anchorFrame:CreateFontString(nil, "OVERLAY")
-    text:SetFont(FONT_PATH, 14, "OUTLINE")
+    text:SetFont(FONT_PATH, fontSize, "OUTLINE")
     text:SetPoint("BOTTOM", anchorFrame, "TOP", 0, 2)
     text:SetDrawLayer("OVERLAY", 7)
     text:Hide()
 
     nameplateTexts[anchorFrame] = text
     return text
+end
+
+-- Update font size on all existing texts
+local function RefreshFontSize()
+    local db = GetDB()
+    local fontSize = db.nameplateFontSize or 14
+    for _, text in pairs(nameplateTexts) do
+        text:SetFont(FONT_PATH, fontSize, "OUTLINE")
+    end
+end
+
+function LWT:RefreshTrackerFontSize()
+    RefreshFontSize()
 end
 
 -- Hide all nameplate texts
