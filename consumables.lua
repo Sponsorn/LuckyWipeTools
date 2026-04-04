@@ -1,57 +1,32 @@
 local ADDON_NAME, LWT = ...
 
--- Tracked consumable items (itemID -> label)
-local CONSUMABLE_ITEMS = {
-    [1259658] = "Harandar Celebration",
-    [1278929] = "Hearty Harandar Celebration",
-    [1240019] = "Flask Cauldron",
-    [1240225] = "Potion Cauldron",
+-- Tracked consumable keywords and their display labels
+-- We match against the spell name from UNIT_SPELLCAST_SUCCEEDED
+local CONSUMABLE_PATTERNS = {
+    { pattern = "Hearty Harandar Celebration",  label = "Hearty Harandar Celebration" },
+    { pattern = "Harandar Celebration",         label = "Harandar Celebration" },
+    { pattern = "Voidlight Potion Cauldron",    label = "Voidlight Potion Cauldron" },
+    { pattern = "Cauldron of Sin'dorei Flasks", label = "Cauldron of Sin'dorei Flasks" },
 }
 
--- Resolved spell ID -> item label (built at runtime)
-local spellToLabel = {}
-local resolved = false
+-- Sort longest patterns first so "Hearty Harandar Celebration" matches before "Harandar Celebration"
+table.sort(CONSUMABLE_PATTERNS, function(a, b)
+    return #a.pattern > #b.pattern
+end)
 
 local function GetDB()
     return LWT.db and LWT.db.consumables or {}
 end
 
--- Resolve item IDs to their "use" spell IDs
-local function ResolveSpells()
-    if resolved then return end
-    local pending = 0
-    for itemID, label in pairs(CONSUMABLE_ITEMS) do
-        local spellName, spellID = C_Item.GetItemSpell(itemID)
-        if spellID then
-            spellToLabel[spellID] = label
-        else
-            -- Item not cached yet, request it
-            pending = pending + 1
-            C_Item.RequestLoadItemDataByID(itemID)
+local function MatchConsumable(spellID)
+    local name = C_Spell.GetSpellName(spellID)
+    if not name then return nil end
+    for _, entry in ipairs(CONSUMABLE_PATTERNS) do
+        if name:find(entry.pattern, 1, true) then
+            return entry.label
         end
     end
-    if pending == 0 then
-        resolved = true
-    end
-end
-
--- Retry resolution when item data arrives
-local function OnItemDataLoaded(itemID)
-    if not CONSUMABLE_ITEMS[itemID] then return end
-    local spellName, spellID = C_Item.GetItemSpell(itemID)
-    if spellID then
-        spellToLabel[spellID] = CONSUMABLE_ITEMS[itemID]
-    end
-    -- Check if all resolved
-    local allDone = true
-    for id in pairs(CONSUMABLE_ITEMS) do
-        local _, sid = C_Item.GetItemSpell(id)
-        if not sid then
-            allDone = false
-            break
-        end
-    end
-    resolved = allDone
+    return nil
 end
 
 local function OnSpellCastSucceeded(unit, castGUID, spellID)
@@ -62,7 +37,7 @@ local function OnSpellCastSucceeded(unit, castGUID, spellID)
     if InCombatLockdown() then return end
     if not IsInRaid() then return end
 
-    local label = spellToLabel[spellID]
+    local label = MatchConsumable(spellID)
     if not label then return end
 
     local caster = UnitName(unit)
@@ -75,19 +50,8 @@ end
 
 -- Event frame
 local eventFrame = CreateFrame("Frame", "LWT_ConsumablesEventFrame")
-eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
-eventFrame:RegisterEvent("ITEM_DATA_LOAD_RESULT")
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
-    if event == "PLAYER_LOGIN" then
-        ResolveSpells()
-    elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
-        OnSpellCastSucceeded(...)
-    elseif event == "ITEM_DATA_LOAD_RESULT" then
-        local itemID, success = ...
-        if success then
-            OnItemDataLoaded(itemID)
-        end
-    end
+    OnSpellCastSucceeded(...)
 end)
