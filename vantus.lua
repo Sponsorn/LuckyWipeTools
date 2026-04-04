@@ -174,6 +174,11 @@ local function OnAddonMessage(prefix, message, channel, sender)
         end
         LWT:UpdateVantusRoster()
 
+    elseif message == "VANTUS:NOTIFY" then
+        if LWT.vantusAlert then
+            LWT.vantusAlert:Fire("Vantus runes available -- type /lwt vantus to request")
+        end
+
     elseif message == "VANTUS:CLEAR" then
         wipe(rosterData)
         pendingRequest = false
@@ -209,6 +214,22 @@ function LWT:ToggleVantusRequest()
             self.vantusAlert:Fire("|cff00ff00Vantus rune requested.|r")
         end
     end
+end
+
+-- =========================================================
+-- Leader notify
+-- =========================================================
+function LWT:SendVantusNotify()
+    if not IsInRaid() then
+        self:Print("You must be in a raid.")
+        return
+    end
+    if not UnitIsGroupLeader("player") and not UnitIsGroupAssistant("player") then
+        self:Print("Only raid leaders and assistants can send vantus notifications.")
+        return
+    end
+    SendComm("VANTUS:NOTIFY")
+    self:Print("Vantus rune notification sent to raid.")
 end
 
 -- =========================================================

@@ -198,6 +198,9 @@ SlashCmdList["LUCKYWIPETOOLS"] = function(msg)
     elseif msg == "vantus" then
         LWT:ToggleVantusRequest()
 
+    elseif msg == "send vantus" then
+        LWT:SendVantusNotify()
+
     else
         LWT:OpenSettings()
     end
