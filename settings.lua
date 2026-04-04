@@ -654,6 +654,42 @@ local function AddAlertDisplayWidgets(c, y, dbFunc, alertSystemFunc, testText, p
 end
 
 -- =========================================================
+-- Page: Encounter Tracker
+-- =========================================================
+AddSidebarButton("tracker", "Encounters")
+local trackerPage = CreatePage("tracker")
+do
+    local c = trackerPage.content
+    local y = -4
+
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
+    desc:SetPoint("TOPLEFT", 8, y)
+    desc:SetWidth(CONTENT_WIDTH - 24)
+    desc:SetJustifyH("LEFT")
+    desc:SetText("Shows enemy fixate targets above their nameplates and alerts when you are fixated. Currently supports Vorasius (Blistercreep).")
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
+
+    CreateCheckbox(c, "Enable", 4, y,
+        function() return LWT.db.tracker.enabled end,
+        function(val) LWT.db.tracker.enabled = val end
+    )
+    y = y - 30
+
+    local endY, trackerCleanup = AddAlertDisplayWidgets(
+        c, y,
+        function() return LWT.db.tracker.alert end,
+        function() return LWT.trackerAlert end,
+        "FIXATED ON YOU!",
+        "Tracker"
+    )
+    y = endY
+
+    trackerPage:HookScript("OnHide", trackerCleanup)
+    trackerPage:SetContentHeight(math.abs(y) + 10)
+end
+
+-- =========================================================
 -- Page: Gateway
 -- =========================================================
 AddSidebarButton("gateway", "Gateway")
@@ -1060,7 +1096,7 @@ end
 -- =========================================================
 settingsFrame:SetScript("OnShow", function()
     if not currentPage then
-        ShowPage("gateway")
+        ShowPage("tracker")
     end
 end)
 

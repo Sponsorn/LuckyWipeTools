@@ -201,5 +201,9 @@ initFrame:SetScript("OnEvent", function()
         return LWT.db.consumables.alert
     end)
     LWT.consumablesAlert:UpdateFont()
+    LWT.trackerAlert = LWT:CreateAlertSystem("tracker", function()
+        return LWT.db.tracker.alert
+    end)
+    LWT.trackerAlert:UpdateFont()
     initFrame:UnregisterEvent("PLAYER_LOGIN")
 end)
