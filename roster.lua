@@ -159,6 +159,14 @@ local function Scan()
     end
 
     if not IsInRaid() then
+        if frame then frame:Hide() end
+        return
+    end
+
+    -- Only show inside raid instances
+    local _, instanceType = GetInstanceInfo()
+    if instanceType ~= "raid" then
+        if frame then frame:Hide() end
         return
     end
 
