@@ -9,7 +9,10 @@
 - Add: Independent alert display settings (font, size, sound, position) per feature — Gateway, Summon Helper, and Vantus each have their own
 - Change: Summon Helper notifications now use on-screen alerts instead of chat messages
 - Change: Removed redundant "summon started" notification — roster already shows pending status
+- Change: Gateway alert now stays visible while item is usable, hides when on cooldown
+- Change: Gateway settings warns if player doesn't have the Gateway Shard
 - Change: Splitter popup now always closes when guild bank closes
+- Change: Item Splitter shows "Split to Bags" / "Split in Bank" buttons when guild bank is open
 - Change: Renamed combat log difficulties — Mythic Keystone to Mythic+, Mythic Dungeon to Mythic0
 - Change: Combat log defaults to Heroic Raid, Mythic Raid, and Mythic+ only
 - Remove: Alert Style settings page — display settings moved into Gateway and Summon Helper pages
