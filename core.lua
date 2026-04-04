@@ -15,6 +15,14 @@ fontHeading:SetFont(FONT_DIR .. "Roboto-SemiBold.ttf", 11, "")
 local fontTitle = CreateFont("LWT_Title")
 fontTitle:SetFont(FONT_DIR .. "Roboto-Bold.ttf", 13, "")
 
+-- Register bundled fonts with LibSharedMedia if available
+local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
+if LSM then
+    LSM:Register("font", "Roboto", FONT_DIR .. "Roboto-Regular.ttf")
+    LSM:Register("font", "Roboto SemiBold", FONT_DIR .. "Roboto-SemiBold.ttf")
+    LSM:Register("font", "Roboto Bold", FONT_DIR .. "Roboto-Bold.ttf")
+end
+
 -- Fallback fonts (used when LibSharedMedia is not available)
 LWT.fallbackFonts = {
     { name = "Roboto", path = FONT_DIR .. "Roboto-Regular.ttf" },
