@@ -165,7 +165,6 @@ local function Scan()
         return
     end
 
-    local db = GetDB()
     if db.showRoster == false then
         if frame then frame:Hide() end
         return

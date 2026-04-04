@@ -11,7 +11,6 @@ local MYTHIC_DIFF = 16
 local rosterData = {}    -- [playerName] = { name, class, unit, requested, noBuff }
 local pendingRequest = false
 local commQueue = {}
-local commsRestricted = false
 local tradeTarget = nil
 
 local frame, titleText
@@ -295,7 +294,7 @@ local function CreateVantusFrame()
             elseif button == "LeftButton" then
                 local unit = self.unit
                 if unit then
-                    InitiateTrade(Ambiguate(UnitName(unit) or "", "short"))
+                    InitiateTrade(unit)
                 end
             end
         end)
@@ -357,7 +356,7 @@ function LWT:UpdateVantusRoster()
         rows[i].playerName = info.name
         rows[i].unit = info.unit
 
-        local inRange = info.unit and CheckInteractDistance(Ambiguate(info.name, "short"), TRADE_DISTANCE)
+        local inRange = info.unit and CheckInteractDistance(info.unit, TRADE_DISTANCE)
         if inRange then
             rows[i].range:SetColorTexture(0, 1, 0, 0.8)
         else
@@ -412,14 +411,17 @@ end
 local function OnTradeShow()
     local target = TradeFrameRecipientNameText and TradeFrameRecipientNameText:GetText()
     if not target or target == "" then return end
-    if target:find("%(%)") then
-        target = target:sub(1, -4)
+    -- Cross-realm names show as "Name(*)" — strip the suffix
+    if target:find("%(.*%)$") then
+        target = target:gsub("%s*%(.*%)$", "")
     end
     tradeTarget = Ambiguate(target, "short")
 end
 
+local TRADE_COMPLETE_MSG = LE_GAME_ERR_TRADE_COMPLETE or 128
+
 local function OnTradeComplete(msgID)
-    if msgID ~= LE_GAME_ERR_TRADE_COMPLETE then return end
+    if msgID ~= TRADE_COMPLETE_MSG then return end
     if not tradeTarget then return end
 
     if rosterData[tradeTarget] then
@@ -484,8 +486,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
     elseif event == "ADDON_RESTRICTION_STATE_CHANGED" then
         local restrictionType, state = ...
         if restrictionType == 1 or restrictionType == 2 then
-            commsRestricted = IsCommRestricted()
-            if not commsRestricted then
+            if not IsCommRestricted() then
                 FlushCommQueue()
             end
         end

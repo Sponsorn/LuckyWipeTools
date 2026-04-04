@@ -106,17 +106,6 @@ function LWT:SetupDB()
 end
 
 
-function LWT:GetFont()
-    local fontName = self.db.alert.fontName or "Friz Quadrata"
-    local fonts = self:GetFontList()
-    for _, entry in ipairs(fonts) do
-        if entry.name == fontName then
-            return entry.path
-        end
-    end
-    return "Fonts\\FRIZQT__.TTF"
-end
-
 -- Get sorted sound list from LibSharedMedia or fallback
 LWT.fallbackSounds = {
     { name = "None" },
@@ -133,20 +122,6 @@ function LWT:GetSoundList()
         return sounds
     end
     return self.fallbackSounds
-end
-
-function LWT:GetSoundFile()
-    if not self.db.alert.sound then return nil end
-    local soundName = self.db.alert.soundName
-    if not soundName then return nil end
-
-    local sounds = self:GetSoundList()
-    for _, entry in ipairs(sounds) do
-        if entry.name == soundName then
-            return entry.path
-        end
-    end
-    return nil
 end
 
 -- Print helper

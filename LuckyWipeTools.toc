@@ -1,6 +1,6 @@
 ## Interface: 120001
 ## Title: LuckyWipeTools
-## Notes: Raid alert tool for Lucky Wipe. Shows personal warnings for boss mechanics like fixates and rift assignments. Configurable fonts, sounds, and positioning.
+## Notes: Raid tools for Lucky Wipe. Gateway alerts, summon helper, vantus rune distribution, combat logging, and item splitting.
 ## X-Curse-Project-ID: 1498910
 ## Author: Anton
 ## Version: @project-version@
