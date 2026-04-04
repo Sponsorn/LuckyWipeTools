@@ -55,6 +55,8 @@ local function OnItemDataLoaded(itemID)
 end
 
 local function OnSpellCastSucceeded(unit, castGUID, spellID)
+    if not spellID or issecretvalue(spellID) then return end
+
     local db = GetDB()
     if not db.enabled then return end
     if InCombatLockdown() then return end
