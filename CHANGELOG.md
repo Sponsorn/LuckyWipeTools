@@ -1,5 +1,19 @@
 # LuckyWipeTools Changelog
 
+## [0.2.1] - 2026-04-04
+- Add: Consumables module — notifies when a raid member places a feast or cauldron (Harandar Celebration, Voidlight Potion Cauldron, Cauldron of Sin'dorei Flasks)
+- Add: `/lwt send vantus` — raid leaders/assistants can notify the raid to request vantus runes, opens roster with everyone's buff status
+- Add: Vantus roster now restricted to raid leaders and assistants only
+- Add: Bundled Roboto fonts registered with LibSharedMedia for font dropdown
+- Change: Vantus roster only populates missing-buff players after `/lwt send vantus` is used
+- Change: Summon roster only shows inside raid instances
+- Change: Roster frames use flat dark style matching settings window
+- Change: All UI fonts switched to Roboto (Regular, SemiBold, Bold)
+- Fix: Combat log module no longer runs checks when disabled
+- Fix: Consumables handles secret spell IDs without errors
+- Fix: Vantus buff detection uses localized spell name (C_Spell.GetSpellInfo)
+- Fix: Vantus buff scan checks C_Secrets.ShouldAurasBeSecret() before reading auras
+
 ## [0.2.0] - 2026-04-04
 - Add: Vantus Rune distribution — request runes with `/lwt vantus`, distributors see a roster and click to trade, auto-removes on trade complete or buff detected, clears on boss kill
 - Add: Item Splitter quantity option — limit how many stacks to split instead of always splitting all
@@ -7,6 +21,8 @@
 - Add: Description text on all settings pages
 - Add: Roster frame position saving and mover for Summon Helper
 - Add: Independent alert display settings (font, size, sound, position) per feature — Gateway, Summon Helper, and Vantus each have their own
+- Add: Font color picker for all alert display settings
+- Add: Bundled Roboto fonts (Regular, SemiBold, Bold) — default alert font is Roboto Bold
 - Change: Summon Helper notifications now use on-screen alerts instead of chat messages
 - Change: Removed redundant "summon started" notification — roster already shows pending status
 - Change: Gateway alert now stays visible while item is usable, hides when on cooldown
@@ -15,9 +31,6 @@
 - Change: Item Splitter shows "Split to Bags" / "Split in Bank" buttons when guild bank is open
 - Change: Renamed combat log difficulties — Mythic Keystone to Mythic+, Mythic Dungeon to Mythic0
 - Change: Combat log defaults to Heroic Raid, Mythic Raid, and Mythic+ only
-- Add: Font color picker for all alert display settings
-- Add: Bundled Roboto fonts (Regular, SemiBold, Bold) — default alert font is Roboto Bold
-- Change: All UI fonts switched from Friz Quadrata to Roboto to match Lantern's style
 - Remove: Alert Style settings page — display settings moved into Gateway and Summon Helper pages
 - Fix: Settings sliders now respond to mouse drag
 - Fix: Roster frame no longer errors on position restore
