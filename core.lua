@@ -57,7 +57,7 @@ local ALERT_DEFAULTS = {
     duration = 3,
     fontSize = 36,
     fontName = "Roboto Bold",
-    color = { r = 1, g = 0.82, b = 0 },
+    color = { r = 1, g = 1, b = 1 },
     position = {},
 }
 
