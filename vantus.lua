@@ -59,7 +59,8 @@ end
 -- Derive localized vantus rune name from a known old spell (MRT's approach)
 local vantusPattern
 do
-    local name = GetSpellInfo(237825) -- "Vantus Rune: Kil'jaeden" or localized equivalent
+    local spellInfo = C_Spell.GetSpellInfo(237825) -- "Vantus Rune: Kil'jaeden" or localized equivalent
+    local name = spellInfo and spellInfo.name
     if name then
         local baseName = name:match("^(.-)[:%-：]")
         if baseName then
