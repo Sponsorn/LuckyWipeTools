@@ -111,15 +111,18 @@ frame:RegisterEvent("ENCOUNTER_END")
 frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ENCOUNTER_START" then
         local encounterID = ...
+        LWT:Print("Encounter started: " .. tostring(encounterID) .. " (type: " .. type(encounterID) .. ")")
         if encounterID == VORASIUS_ENCOUNTER then
             local db = GetDB()
             if db.enabled then
                 inEncounter = true
                 StartScanning()
+                LWT:Print("Tracker scanning started")
             end
         end
     elseif event == "ENCOUNTER_END" then
         inEncounter = false
         StopScanning()
+        LWT:Print("Tracker scanning stopped")
     end
 end)
