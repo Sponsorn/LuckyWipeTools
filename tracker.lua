@@ -66,7 +66,8 @@ local function ScanNameplates()
                 if targetName and not issecretvalue(targetName) then
                     local text = GetNameplateText(unit)
                     if text then
-                        local classColor = C_ClassColor.GetClassColor(UnitClassBase(target))
+                        local classBase = UnitClassBase(target)
+                        local classColor = classBase and C_ClassColor.GetClassColor(classBase)
                         local colored = classColor and classColor:WrapTextInColorCode(targetName) or targetName
                         text:SetText(colored)
                         text:Show()
