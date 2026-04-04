@@ -194,6 +194,9 @@ SlashCmdList["LUCKYWIPETOOLS"] = function(msg)
             LWT.summonAlert:Fire("|cff9b59b6Portal placed! Click to summon|r")
         end
 
+    elseif msg == "test tracker" then
+        LWT:ToggleTrackerTest()
+
     elseif msg == "split" then
         LWT:ToggleSplitter()
 

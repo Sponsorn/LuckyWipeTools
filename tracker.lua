@@ -122,6 +122,20 @@ local function StopScanning()
     wasFixated = false
 end
 
+-- Test mode toggle
+local testMode = false
+function LWT:ToggleTrackerTest()
+    if testMode then
+        testMode = false
+        StopScanning()
+        self:Print("Tracker test stopped.")
+    else
+        testMode = true
+        StartScanning()
+        self:Print("Tracker test started — target names shown above enemy nameplates. Type /lwt test tracker to stop.")
+    end
+end
+
 -- Event frame
 local frame = CreateFrame("Frame", "LWT_TrackerFrame")
 frame:RegisterEvent("ENCOUNTER_START")
