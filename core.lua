@@ -98,6 +98,10 @@ local defaults = {
         },
         instances = {},     -- [instanceID:difficultyID] = { enabled, name, diffName }
     },
+    consumables = {
+        enabled = true,
+        alert = ALERT_DEFAULTS,
+    },
     vantus = {
         enabled = true,
         showRoster = true,

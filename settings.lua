@@ -916,6 +916,42 @@ do
 end
 
 -- =========================================================
+-- Page: Consumables
+-- =========================================================
+AddSidebarButton("consumables", "Consumables")
+local consumablesPage = CreatePage("consumables")
+do
+    local c = consumablesPage.content
+    local y = -4
+
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
+    desc:SetPoint("TOPLEFT", 8, y)
+    desc:SetWidth(CONTENT_WIDTH - 24)
+    desc:SetJustifyH("LEFT")
+    desc:SetText("Notifies when a raid member places a feast or cauldron. Only triggers outside of combat in raid instances.")
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
+
+    CreateCheckbox(c, "Enable", 4, y,
+        function() return LWT.db.consumables.enabled end,
+        function(val) LWT.db.consumables.enabled = val end
+    )
+    y = y - 30
+
+    local endY, consumablesCleanup = AddAlertDisplayWidgets(
+        c, y,
+        function() return LWT.db.consumables.alert end,
+        function() return LWT.consumablesAlert end,
+        "Playername placed Hearty Harandar Celebration",
+        "Consumables"
+    )
+    y = endY
+
+    consumablesPage:HookScript("OnHide", consumablesCleanup)
+    consumablesPage:SetContentHeight(math.abs(y) + 10)
+end
+
+-- =========================================================
 -- Page: Combat Log
 -- =========================================================
 AddSidebarButton("combatlog", "Combat Log")

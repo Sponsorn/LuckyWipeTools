@@ -12,6 +12,7 @@ alert.lua
 gateway.lua
 roster.lua
 vantus.lua
+consumables.lua
 combatlog.lua
 itemsplitter.lua
 settings.lua

@@ -197,5 +197,9 @@ initFrame:SetScript("OnEvent", function()
         return LWT.db.vantus.alert
     end)
     LWT.vantusAlert:UpdateFont()
+    LWT.consumablesAlert = LWT:CreateAlertSystem("consumables", function()
+        return LWT.db.consumables.alert
+    end)
+    LWT.consumablesAlert:UpdateFont()
     initFrame:UnregisterEvent("PLAYER_LOGIN")
 end)
