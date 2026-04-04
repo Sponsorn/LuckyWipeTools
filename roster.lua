@@ -62,12 +62,12 @@ local function CreateRosterFrame()
 
     frame:Hide()
 
-    titleText = frame:CreateFontString("LWT_RosterTitle", "OVERLAY", "GameFontNormalSmall")
+    titleText = frame:CreateFontString("LWT_RosterTitle", "OVERLAY", "LWT_Heading")
     titleText:SetPoint("TOP", 0, -6)
     titleText:SetText("Outside")
     titleText:SetTextColor(1, 0.82, 0)
 
-    portalText = frame:CreateFontString("LWT_RosterPortal", "OVERLAY", "GameFontNormalSmall")
+    portalText = frame:CreateFontString("LWT_RosterPortal", "OVERLAY", "LWT_Heading")
     portalText:SetTextColor(0.6, 0.2, 1)
     portalText:Hide()
 
@@ -79,7 +79,7 @@ local function CreateRosterFrame()
         row:RegisterForClicks("AnyUp")
         row:SetAttribute("type1", "target")
 
-        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.text = row:CreateFontString(nil, "OVERLAY", "LWT_Body")
         row.text:SetAllPoints()
         row.text:SetJustifyH("LEFT")
 

@@ -34,7 +34,7 @@ local function CreateButton(name, parent, width, height)
     btn:SetSize(width, height)
     FlatBackdrop(btn, { 0.12, 0.12, 0.14, 1 }, { 0.25, 0.25, 0.28, 1 })
 
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "LWT_Body")
     btn.text:SetPoint("CENTER")
 
     btn.SetText = function(self, str) self.text:SetText(str) end
@@ -79,7 +79,7 @@ local function CreateCheckbox(parent, label, x, y, getFunc, setFunc)
     btn.check = check
 
     -- Label
-    local text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local text = btn:CreateFontString(nil, "OVERLAY", "LWT_Body")
     text:SetPoint("LEFT", box, "RIGHT", 6, 0)
     text:SetText(label)
     btn.label = text
@@ -121,11 +121,11 @@ local function CreateSlider(parent, label, x, y, minVal, maxVal, step, getFunc, 
     wrapper:SetSize(280, 40)
     wrapper:SetPoint("TOPLEFT", x, y)
 
-    local title = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local title = wrapper:CreateFontString(nil, "OVERLAY", "LWT_Body")
     title:SetPoint("TOPLEFT", 0, 0)
     title:SetText(label)
 
-    local valueText = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local valueText = wrapper:CreateFontString(nil, "OVERLAY", "LWT_Body")
     valueText:SetPoint("TOPRIGHT", 0, 0)
     valueText:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
 
@@ -182,7 +182,7 @@ local function CreateDropdown(parent, label, x, y, getItemsFunc, getFunc, setFun
     wrapper:SetSize(280, 38)
     wrapper:SetPoint("TOPLEFT", x, y)
 
-    local title = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local title = wrapper:CreateFontString(nil, "OVERLAY", "LWT_Body")
     title:SetPoint("TOPLEFT", 0, 0)
     title:SetText(label)
 
@@ -191,13 +191,13 @@ local function CreateDropdown(parent, label, x, y, getItemsFunc, getFunc, setFun
     btn:SetPoint("TOPLEFT", 0, -14)
     FlatBackdrop(btn, { 0.08, 0.08, 0.10, 1 }, { 0.25, 0.25, 0.28, 1 })
 
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "LWT_Body")
     btn.text:SetPoint("LEFT", 8, 0)
     btn.text:SetPoint("RIGHT", -20, 0)
     btn.text:SetJustifyH("LEFT")
 
     -- Arrow
-    local arrow = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local arrow = btn:CreateFontString(nil, "OVERLAY", "LWT_Body")
     arrow:SetPoint("RIGHT", -6, 0)
     arrow:SetText("v")
     arrow:SetTextColor(0.5, 0.5, 0.5)
@@ -235,7 +235,7 @@ local function CreateDropdown(parent, label, x, y, getItemsFunc, getFunc, setFun
                 row:SetPoint("TOPLEFT", 0, -(i - 1) * rowHeight)
                 row:SetPoint("RIGHT")
 
-                row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+                row.text = row:CreateFontString(nil, "OVERLAY", "LWT_Body")
                 row.text:SetPoint("LEFT", 8, 0)
                 row.text:SetPoint("RIGHT", -8, 0)
                 row.text:SetJustifyH("LEFT")
@@ -313,7 +313,7 @@ local function CreateColorPicker(parent, label, x, y, getFunc, setFunc)
     wrapper:SetSize(280, 24)
     wrapper:SetPoint("TOPLEFT", x, y)
 
-    local title = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local title = wrapper:CreateFontString(nil, "OVERLAY", "LWT_Body")
     title:SetPoint("LEFT", 0, 0)
     title:SetText(label)
 
@@ -367,7 +367,7 @@ local function CreateHeader(parent, text, x, y)
     line:SetPoint("RIGHT", parent, "RIGHT", -8, 0)
     line:SetColorTexture(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3], 0.2)
 
-    local label = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+    local label = parent:CreateFontString(nil, "OVERLAY", "LWT_Heading")
     label:SetPoint("TOPLEFT", x, y - 10)
     label:SetText(text)
     label:SetTextColor(HEADER_COLOR[1], HEADER_COLOR[2], HEADER_COLOR[3])
@@ -403,7 +403,7 @@ local titleBg = titleBar:CreateTexture(nil, "BACKGROUND")
 titleBg:SetAllPoints()
 titleBg:SetColorTexture(0.08, 0.08, 0.10, 1)
 
-local title = titleBar:CreateFontString("LWT_SettingsTitle", "OVERLAY", "GameFontNormal")
+local title = titleBar:CreateFontString("LWT_SettingsTitle", "OVERLAY", "LWT_Title")
 title:SetPoint("LEFT", 12, 0)
 title:SetText("LuckyWipeTools")
 title:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
@@ -412,7 +412,7 @@ title:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
 local closeBtn = CreateFrame("Button", "LWT_SettingsCloseBtn", titleBar)
 closeBtn:SetSize(28, 28)
 closeBtn:SetPoint("RIGHT", -2, 0)
-closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+closeBtn.text = closeBtn:CreateFontString(nil, "OVERLAY", "LWT_Title")
 closeBtn.text:SetPoint("CENTER", 0, 0)
 closeBtn.text:SetText("x")
 closeBtn.text:SetTextColor(0.5, 0.5, 0.5)
@@ -507,7 +507,7 @@ local function AddSidebarButton(key, label)
     btn.indicator:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 1)
     btn.indicator:Hide()
 
-    btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    btn.text = btn:CreateFontString(nil, "OVERLAY", "LWT_Body")
     btn.text:SetPoint("LEFT", 12, 0)
     btn.text:SetText(label)
     btn.text:SetJustifyH("LEFT")
@@ -662,7 +662,7 @@ do
     local c = gatewayPage.content
     local y = -4
 
-    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
     desc:SetPoint("TOPLEFT", 8, y)
     desc:SetWidth(CONTENT_WIDTH - 24)
     desc:SetJustifyH("LEFT")
@@ -671,7 +671,7 @@ do
     y = y - (desc:GetStringHeight() + 14)
 
     -- Item check warning
-    local noItemWarning = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local noItemWarning = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
     noItemWarning:SetPoint("TOPLEFT", 8, y)
     noItemWarning:SetWidth(CONTENT_WIDTH - 24)
     noItemWarning:SetJustifyH("LEFT")
@@ -729,7 +729,7 @@ do
     local c = summonPage.content
     local y = -4
 
-    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
     desc:SetPoint("TOPLEFT", 8, y)
     desc:SetWidth(CONTENT_WIDTH - 24)
     desc:SetJustifyH("LEFT")
@@ -834,7 +834,7 @@ do
     local c = vantusPage.content
     local y = -4
 
-    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
     desc:SetPoint("TOPLEFT", 8, y)
     desc:SetWidth(CONTENT_WIDTH - 24)
     desc:SetJustifyH("LEFT")
@@ -924,7 +924,7 @@ do
     local c = combatLogPage.content
     local y = -4
 
-    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
     desc:SetPoint("TOPLEFT", 8, y)
     desc:SetWidth(CONTENT_WIDTH - 24)
     desc:SetJustifyH("LEFT")
@@ -977,7 +977,7 @@ do
     local c = splitterPage.content
     local y = -4
 
-    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
     desc:SetPoint("TOPLEFT", 8, y)
     desc:SetWidth(CONTENT_WIDTH - 24)
     desc:SetJustifyH("LEFT")
@@ -994,7 +994,7 @@ do
     CreateHeader(c, "Usage", 4, y)
     y = y - 24
 
-    local usage = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    local usage = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
     usage:SetPoint("TOPLEFT", 8, y)
     usage:SetWidth(CONTENT_WIDTH - 24)
     usage:SetJustifyH("LEFT")

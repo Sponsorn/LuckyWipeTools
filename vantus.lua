@@ -259,7 +259,7 @@ local function CreateVantusFrame()
 
     frame:Hide()
 
-    titleText = frame:CreateFontString("LWT_VantusTitle", "OVERLAY", "GameFontNormalSmall")
+    titleText = frame:CreateFontString("LWT_VantusTitle", "OVERLAY", "LWT_Heading")
     titleText:SetPoint("TOP", 0, -6)
     titleText:SetText("Vantus Runes")
     titleText:SetTextColor(1, 0.82, 0)
@@ -271,7 +271,7 @@ local function CreateVantusFrame()
         row:SetPoint("RIGHT", frame, "RIGHT", -8, 0)
         row:RegisterForClicks("AnyUp")
 
-        row.text = row:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        row.text = row:CreateFontString(nil, "OVERLAY", "LWT_Body")
         row.text:SetPoint("LEFT")
         row.text:SetPoint("RIGHT", -14, 0)
         row.text:SetJustifyH("LEFT")

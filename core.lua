@@ -5,6 +5,16 @@ LWT.name = ADDON_NAME
 
 local FONT_DIR = "Interface\\AddOns\\LuckyWipeTools\\Fonts\\"
 
+-- UI font objects (available to all files loaded after core.lua)
+local fontBody = CreateFont("LWT_Body")
+fontBody:SetFont(FONT_DIR .. "Roboto-Regular.ttf", 11, "")
+
+local fontHeading = CreateFont("LWT_Heading")
+fontHeading:SetFont(FONT_DIR .. "Roboto-SemiBold.ttf", 11, "")
+
+local fontTitle = CreateFont("LWT_Title")
+fontTitle:SetFont(FONT_DIR .. "Roboto-Bold.ttf", 13, "")
+
 -- Fallback fonts (used when LibSharedMedia is not available)
 LWT.fallbackFonts = {
     { name = "Roboto", path = FONT_DIR .. "Roboto-Regular.ttf" },
