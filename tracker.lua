@@ -75,6 +75,7 @@ local function HideAll()
     end
 end
 
+local debugOnce = true
 local function ScanNameplates()
     if not testMode then
         local db = GetDB()
@@ -84,15 +85,28 @@ local function ScanNameplates()
     HideAll()
 
     local playerFixated = false
+    local found = 0
 
     for i = 1, 40 do
         local unit = "nameplate" .. i
         if UnitExists(unit) and not UnitIsFriend("player", unit) then
+            found = found + 1
             local target = unit .. "target"
-            if UnitExists(target) then
+            local hasTarget = UnitExists(target)
+            local anchorFrame = GetAnchorFrame(unit)
+
+            if debugOnce then
+                local mobName = UnitName(unit) or "?"
+                LWT:Print(unit .. " = " .. mobName
+                    .. " | target=" .. tostring(hasTarget)
+                    .. " | anchor=" .. tostring(anchorFrame ~= nil)
+                    .. " | plater=" .. tostring(usePlater)
+                    .. " | .unitFrame=" .. tostring(anchorFrame and C_NamePlate.GetNamePlateForUnit(unit) and C_NamePlate.GetNamePlateForUnit(unit).unitFrame ~= nil))
+            end
+
+            if hasTarget then
                 local targetName = UnitName(target)
                 if targetName and not issecretvalue(targetName) then
-                    local anchorFrame = GetAnchorFrame(unit)
                     if anchorFrame then
                         local text = GetOrCreateText(anchorFrame)
                         local classBase = UnitClassBase(target)
@@ -108,6 +122,11 @@ local function ScanNameplates()
                 end
             end
         end
+    end
+
+    if debugOnce then
+        LWT:Print("Scan found " .. found .. " enemy nameplates")
+        debugOnce = false
     end
 
     -- Show/hide persistent alert based on fixate state
