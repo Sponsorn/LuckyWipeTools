@@ -335,7 +335,7 @@ rosterFrame:SetScript("OnEvent", function(_, event, ...)
                     LWT.summonAlert:Fire("|cff9b59b6" .. caster .. " placed a summoning portal!|r")
                 end
             end
-            UpdateDisplay(lastOutside)
+            Scan()
         end
         return
     elseif event == "INCOMING_SUMMON_CHANGED" then
