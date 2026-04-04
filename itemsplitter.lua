@@ -71,8 +71,8 @@ local function PopulateSlot(source, bag, slot, tab)
         stackCount = stackCount,
     }
 
-    -- Show destination toggle when source is guild bank
-    if source == "guildbank" then
+    -- Show destination toggle when guild bank is open
+    if guildBankOpen then
         popup.destLabel:Show()
         popup.destValue:Show()
         popup.destBtn:Show()
@@ -353,9 +353,13 @@ local function CreatePopup()
         -- Detect source: check if guild bank is open and item came from there
         if guildBankOpen then
             local tab = GetCurrentGuildBankTab()
-            -- Find which slot this item is in by scanning the tab
             for s = 1, GUILD_BANK_SLOTS_PER_TAB do
                 local texture, count, locked = GetGuildBankItemInfo(tab, s)
+                if locked then
+                    -- Locked slot = picked up from here
+                    PopulateSlot("guildbank", nil, s, tab)
+                    return
+                end
                 if texture and count > 0 then
                     local gbLink = GetGuildBankItemLink(tab, s)
                     if gbLink and gbLink == link then
