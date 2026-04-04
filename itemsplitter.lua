@@ -560,6 +560,10 @@ end
 -- Guild bank button
 -- =========================================================
 local function CreateGuildBankButton()
+    if LWT.db and LWT.db.itemSplitter and not LWT.db.itemSplitter.enabled then
+        if guildBankButton then guildBankButton:Hide() end
+        return
+    end
     if guildBankButton then
         guildBankButton:Show()
         return
@@ -607,7 +611,7 @@ gbFrame:SetScript("OnEvent", function(_, event, type)
     else
         guildBankOpen = false
         if guildBankButton then guildBankButton:Hide() end
-        if popup and popup:IsShown() and splitState and splitState.source == "guildbank" then
+        if popup and popup:IsShown() then
             popup:Hide()
         end
     end
@@ -617,6 +621,10 @@ end)
 -- Public API
 -- =========================================================
 function LWT:ToggleSplitter()
+    if self.db and self.db.itemSplitter and not self.db.itemSplitter.enabled then
+        self:Print("Item Splitter is disabled. Enable it in /lwt settings.")
+        return
+    end
     local f = CreatePopup()
     if f:IsShown() then
         f:Hide()

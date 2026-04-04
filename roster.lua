@@ -42,7 +42,20 @@ local function CreateRosterFrame()
     frame:RegisterForDrag("LeftButton")
     frame:SetClampedToScreen(true)
     frame:SetScript("OnDragStart", function(self) self:StartMoving() end)
-    frame:SetScript("OnDragStop", function(self) self:StopMovingOrSizing() end)
+    frame:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        local point, _, _, x, y = self:GetPoint()
+        local db = GetDB()
+        db.rosterPosition = { point = point, x = x, y = y }
+    end)
+
+    -- Restore saved position
+    local pos = GetDB().rosterPosition
+    if pos and pos.point then
+        frame:ClearAllPoints()
+        frame:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
+    end
+
     frame:Hide()
 
     titleText = frame:CreateFontString("LWT_RosterTitle", "OVERLAY", "GameFontNormalSmall")
@@ -142,6 +155,12 @@ local function Scan()
         return
     end
 
+    local db = GetDB()
+    if not db.enabled then
+        if frame then frame:Hide() end
+        return
+    end
+
     if not IsInRaid() then
         return
     end
@@ -199,6 +218,8 @@ end
 -- Summon tracking (merged from summon.lua)
 local function ScanSummons()
     if LanternHandles() then return end
+    local db = GetDB()
+    if not db.enabled then return end
 
     local prefix, count
     if IsInRaid() then
@@ -218,18 +239,14 @@ local function ScanSummons()
             local db = GetDB()
             if hasSum and status == Enum.SummonStatus.Pending and not pendingSummons[unit] then
                 pendingSummons[unit] = true
-                local name = UnitName(unit)
-                if name and not issecretvalue(name) and db.showSummonStarted ~= false then
-                    LWT:Print("Summoning " .. name .. ", please click!")
-                end
             elseif not hasSum or status ~= Enum.SummonStatus.Pending then
                 if pendingSummons[unit] then
                     local name = UnitName(unit)
-                    if name and not issecretvalue(name) and db.showStatus ~= false then
+                    if name and not issecretvalue(name) and db.showStatus ~= false and LWT.summonAlert then
                         if status == Enum.SummonStatus.Accepted then
-                            LWT:Print(name .. " accepted the summon.")
+                            LWT.summonAlert:Fire("|cff00ff00" .. name .. " accepted the summon.|r")
                         elseif status == Enum.SummonStatus.Declined then
-                            LWT:Print(name .. " declined the summon.")
+                            LWT.summonAlert:Fire("|cffff2020" .. name .. " declined the summon.|r")
                         end
                     end
                 end
@@ -237,6 +254,43 @@ local function ScanSummons()
             end
         end
     end
+end
+
+-- Mover mode for roster frame
+local rosterMoverBg = nil
+
+function LWT:EnableRosterMover()
+    if not frame then CreateRosterFrame() end
+
+    frame:ClearAllPoints()
+    local pos = GetDB().rosterPosition
+    if pos and pos.point then
+        frame:SetPoint(pos.point, UIParent, pos.point, pos.x, pos.y)
+    else
+        frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -200, -200)
+    end
+
+    -- Show placeholder content
+    for i = 1, MAX_ROWS do rows[i]:Hide() end
+    portalText:Hide()
+    titleText:SetText("|cffff9900Drag to move|r")
+    frame:SetHeight(40)
+    frame:Show()
+
+    if not rosterMoverBg then
+        rosterMoverBg = frame:CreateTexture("LWT_RosterMoverBg", "BACKGROUND")
+        rosterMoverBg:SetAllPoints()
+        rosterMoverBg:SetColorTexture(0, 0, 0, 0.4)
+    end
+    rosterMoverBg:Show()
+end
+
+function LWT:DisableRosterMover()
+    if not frame then return end
+    if rosterMoverBg then rosterMoverBg:Hide() end
+    frame:Hide()
+    -- Trigger a scan to restore normal state if in a raid
+    Scan()
 end
 
 local rosterFrame = CreateFrame("Frame", "LWT_RosterEventFrame")
@@ -273,8 +327,8 @@ rosterFrame:SetScript("OnEvent", function(_, event, ...)
             if db.showPortalPlaced ~= false then
                 local unit = ...
                 local caster = UnitName(unit)
-                if caster and not issecretvalue(caster) then
-                    LWT:Print(caster .. " placed a summoning portal, please click!")
+                if caster and not issecretvalue(caster) and LWT.summonAlert then
+                    LWT.summonAlert:Fire("|cff9b59b6" .. caster .. " placed a summoning portal!|r")
                 end
             end
             UpdateDisplay(lastOutside)

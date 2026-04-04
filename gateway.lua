@@ -25,7 +25,9 @@ local function CheckGateway()
 
     -- Alert on transition from not-usable to usable
     if isUsable and not lastUsable then
-        LWT:FireAlert("|cff9b59b6GATEWAY READY|r")
+        if LWT.gatewayAlert then
+            LWT.gatewayAlert:Fire("|cff9b59b6GATEWAY READY|r")
+        end
     end
 
     lastUsable = isUsable
