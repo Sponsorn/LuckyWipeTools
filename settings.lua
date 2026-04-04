@@ -478,15 +478,18 @@ end
 -- =========================================================
 -- Helper: Add alert display settings to a page
 -- =========================================================
-local function AddAlertDisplayWidgets(c, y, dbFunc, alertSystemFunc, testText, prefix)
+local function AddAlertDisplayWidgets(c, y, dbFunc, alertSystemFunc, testText, prefix, opts)
+    opts = opts or {}
     CreateHeader(c, "Display", 4, y)
     y = y - 24
 
-    CreateSlider(c, "Duration (seconds)", 8, y, 1, 10, 0.5,
-        function() return dbFunc().duration end,
-        function(val) dbFunc().duration = val end
-    )
-    y = y - 52
+    if not opts.noDuration then
+        CreateSlider(c, "Duration (seconds)", 8, y, 1, 10, 0.5,
+            function() return dbFunc().duration end,
+            function(val) dbFunc().duration = val end
+        )
+        y = y - 52
+    end
 
     CreateSlider(c, "Font Size", 8, y, 16, 72, 2,
         function() return dbFunc().fontSize end,
@@ -598,9 +601,27 @@ do
     desc:SetPoint("TOPLEFT", 8, y)
     desc:SetWidth(CONTENT_WIDTH - 24)
     desc:SetJustifyH("LEFT")
-    desc:SetText("Alerts you when your Demonic Gateway is ready to be used again.")
+    desc:SetText("Shows a persistent alert while your Demonic Gateway is ready to use.")
     desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
     y = y - (desc:GetStringHeight() + 14)
+
+    -- Item check warning
+    local noItemWarning = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    noItemWarning:SetPoint("TOPLEFT", 8, y)
+    noItemWarning:SetWidth(CONTENT_WIDTH - 24)
+    noItemWarning:SetJustifyH("LEFT")
+    noItemWarning:SetText("|cffff9900You don't have a Gateway Shard in your inventory.|r")
+    noItemWarning:Hide()
+
+    gatewayPage:HookScript("OnShow", function()
+        if LWT.HasGatewayItem and not LWT:HasGatewayItem() then
+            noItemWarning:Show()
+        else
+            noItemWarning:Hide()
+        end
+    end)
+
+    y = y - (noItemWarning:GetStringHeight() + 10)
 
     CreateCheckbox(c, "Enable", 4, y,
         function() return LWT.db.gateway.enabled end,
@@ -625,7 +646,8 @@ do
         function() return LWT.db.gateway.alert end,
         function() return LWT.gatewayAlert end,
         "|cff9b59b6GATEWAY READY|r",
-        "Gateway"
+        "Gateway",
+        { noDuration = true }
     )
     y = endY
 

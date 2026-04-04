@@ -92,6 +92,39 @@ function LWT:CreateAlertSystem(key, dbKeyFunc)
         end)
     end
 
+    -- Persistent show/hide (no fade, no timer)
+    function system:Show(text)
+        self:UpdateFont()
+        fadeOut:Stop()
+        if fadeTimer then fadeTimer:Cancel(); fadeTimer = nil end
+
+        alertText:SetText(text or "|cffff2020ALERT!|r")
+        alertFrame:SetAlpha(1)
+        alertFrame:Show()
+
+        -- Play sound on first show
+        local db = GetDB()
+        if db.sound then
+            local soundName = db.soundName
+            if soundName then
+                local sounds = LWT:GetSoundList()
+                for _, entry in ipairs(sounds) do
+                    if entry.name == soundName and entry.path then
+                        PlaySoundFile(entry.path, "Master")
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    function system:Hide()
+        fadeOut:Stop()
+        if fadeTimer then fadeTimer:Cancel(); fadeTimer = nil end
+        alertFrame:Hide()
+        alertFrame:SetAlpha(1)
+    end
+
     -- Mover mode
     local moverBg = nil
 

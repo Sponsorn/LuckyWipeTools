@@ -4,30 +4,48 @@ local POLL_INTERVAL = 0.1
 local ticker = nil
 local lastUsable = false
 
+local function ShowGatewayAlert()
+    local sys = LWT.gatewayAlert
+    if not sys then return end
+    sys:UpdateFont()
+    sys:Show("|cff9b59b6GATEWAY READY|r")
+end
+
+local function HideGatewayAlert()
+    local sys = LWT.gatewayAlert
+    if not sys then return end
+    sys:Hide()
+end
+
 local function CheckGateway()
     local db = LWT.db
-    if not db or not db.gateway.enabled then return end
+    if not db or not db.gateway.enabled then
+        if lastUsable then HideGatewayAlert() end
+        lastUsable = false
+        return
+    end
 
     -- Must have the item
     local count = C_Item.GetItemCount(LWT.GATEWAY_ITEM_ID)
     if count == 0 then
+        if lastUsable then HideGatewayAlert() end
         lastUsable = false
         return
     end
 
     -- Combat-only check
     if db.gateway.combatOnly and not InCombatLockdown() then
+        if lastUsable then HideGatewayAlert() end
         lastUsable = false
         return
     end
 
     local isUsable = C_Item.IsUsableItem(LWT.GATEWAY_ITEM_ID)
 
-    -- Alert on transition from not-usable to usable
     if isUsable and not lastUsable then
-        if LWT.gatewayAlert then
-            LWT.gatewayAlert:Fire("|cff9b59b6GATEWAY READY|r")
-        end
+        ShowGatewayAlert()
+    elseif not isUsable and lastUsable then
+        HideGatewayAlert()
     end
 
     lastUsable = isUsable
@@ -43,7 +61,13 @@ local function StopPolling()
         ticker:Cancel()
         ticker = nil
     end
+    if lastUsable then HideGatewayAlert() end
     lastUsable = false
+end
+
+-- Check if player has the Gateway item
+function LWT:HasGatewayItem()
+    return C_Item.GetItemCount(self.GATEWAY_ITEM_ID) > 0
 end
 
 -- Start/stop based on combat state and settings
@@ -60,12 +84,10 @@ gatewayFrame:SetScript("OnEvent", function(_, event)
             StartPolling()
         end
     elseif event == "PLAYER_REGEN_DISABLED" then
-        -- Entering combat
         if LWT.db.gateway.enabled then
             StartPolling()
         end
     elseif event == "PLAYER_REGEN_ENABLED" then
-        -- Leaving combat
         if LWT.db.gateway.combatOnly then
             StopPolling()
         end
