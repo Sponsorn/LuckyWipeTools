@@ -5,55 +5,47 @@ local ADDON_NAME, LWT = ...
 -- Works by scanning nameplate units for their targets
 -- =========================================================
 
-local SCAN_INTERVAL = 0.5
+local SCAN_INTERVAL = 0.1
 local VORASIUS_ENCOUNTER = 3177
+local FONT_PATH = "Interface\\AddOns\\LuckyWipeTools\\Fonts\\Roboto-Bold.ttf"
 
 local scanTicker = nil
 local inEncounter = false
-local nameplateTexts = {} -- [nameplateUnit] = fontString
+local nameplateTexts = {} -- [nameplate frame] = fontString
 local wasFixated = false
 
 local function GetDB()
     return LWT.db and LWT.db.tracker or {}
 end
 
--- Get or create a font string anchored above a nameplate
-local function GetNameplateText(unit)
-    if nameplateTexts[unit] then return nameplateTexts[unit] end
+-- Get or create a font string for a nameplate frame
+local function GetOrCreateText(nameplate)
+    if nameplateTexts[nameplate] then
+        return nameplateTexts[nameplate]
+    end
 
-    local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
-    if not nameplate then return nil end
-
-    local text = nameplate:CreateFontString("LWT_NPTarget_" .. unit, "OVERLAY")
-    text:SetFont("Interface\\AddOns\\LuckyWipeTools\\Fonts\\Roboto-Bold.ttf", 14, "OUTLINE")
+    local text = nameplate:CreateFontString(nil, "OVERLAY")
+    text:SetFont(FONT_PATH, 14, "OUTLINE")
     text:SetPoint("BOTTOM", nameplate, "TOP", 0, 2)
     text:Hide()
 
-    nameplateTexts[unit] = text
+    nameplateTexts[nameplate] = text
     return text
-end
-
--- Clean up font string when nameplate is removed
-local function RemoveNameplateText(unit)
-    local text = nameplateTexts[unit]
-    if text then
-        text:Hide()
-        text:SetText("")
-        nameplateTexts[unit] = nil
-    end
 end
 
 -- Hide all nameplate texts
 local function HideAll()
-    for unit, text in pairs(nameplateTexts) do
+    for nameplate, text in pairs(nameplateTexts) do
         text:Hide()
-        text:SetText("")
     end
 end
 
 local function ScanNameplates()
     local db = GetDB()
     if not db.enabled then return end
+
+    -- Hide all first, then show active ones
+    HideAll()
 
     local playerFixated = false
 
@@ -64,8 +56,9 @@ local function ScanNameplates()
             if UnitExists(target) then
                 local targetName = UnitName(target)
                 if targetName and not issecretvalue(targetName) then
-                    local text = GetNameplateText(unit)
-                    if text then
+                    local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
+                    if nameplate then
+                        local text = GetOrCreateText(nameplate)
                         local classBase = UnitClassBase(target)
                         local classColor = classBase and C_ClassColor.GetClassColor(classBase)
                         local colored = classColor and classColor:WrapTextInColorCode(targetName) or targetName
@@ -77,12 +70,6 @@ local function ScanNameplates()
                     if UnitIsUnit(target, "player") then
                         playerFixated = true
                     end
-                end
-            else
-                -- Mob has no target, hide text
-                local text = nameplateTexts[unit]
-                if text then
-                    text:Hide()
                 end
             end
         end
@@ -120,7 +107,6 @@ end
 local frame = CreateFrame("Frame", "LWT_TrackerFrame")
 frame:RegisterEvent("ENCOUNTER_START")
 frame:RegisterEvent("ENCOUNTER_END")
-frame:RegisterEvent("NAME_PLATE_UNIT_REMOVED")
 
 frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ENCOUNTER_START" then
@@ -135,8 +121,5 @@ frame:SetScript("OnEvent", function(_, event, ...)
     elseif event == "ENCOUNTER_END" then
         inEncounter = false
         StopScanning()
-    elseif event == "NAME_PLATE_UNIT_REMOVED" then
-        local unit = ...
-        RemoveNameplateText(unit)
     end
 end)
