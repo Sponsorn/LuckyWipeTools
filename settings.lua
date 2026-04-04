@@ -130,16 +130,19 @@ local function CreateSlider(parent, label, x, y, minVal, maxVal, step, getFunc, 
     valueText:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
 
     local slider = CreateFrame("Slider", "LWT_Slider_" .. sliderCount, wrapper, "BackdropTemplate")
-    slider:SetSize(280, 12)
-    slider:SetPoint("TOPLEFT", 0, -16)
+    slider:SetSize(280, 16)
+    slider:SetPoint("TOPLEFT", 0, -14)
     FlatBackdrop(slider, { 0.08, 0.08, 0.10, 1 }, { 0.25, 0.25, 0.28, 1 })
+    slider:SetOrientation("HORIZONTAL")
+    slider:EnableMouse(true)
     slider:SetMinMaxValues(minVal, maxVal)
     slider:SetValueStep(step)
     slider:SetObeyStepOnDrag(true)
+    slider:SetHitRectInsets(0, 0, -6, -6)
 
     -- Thumb
     local thumb = slider:CreateTexture(nil, "OVERLAY")
-    thumb:SetSize(14, 14)
+    thumb:SetSize(14, 18)
     thumb:SetColorTexture(ACCENT[1], ACCENT[2], ACCENT[3], 0.9)
     slider:SetThumbTexture(thumb)
 
