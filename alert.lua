@@ -41,6 +41,14 @@ function LWT:CreateAlertSystem(key, dbKeyFunc)
 
     local fadeTimer = nil
 
+    -- Strip WoW color codes from text so DB color applies cleanly
+    local function StripColorCodes(text)
+        if not text then return text end
+        text = text:gsub("|c%x%x%x%x%x%x%x%x", "")
+        text = text:gsub("|r", "")
+        return text
+    end
+
     function system:UpdateFont()
         local db = GetDB()
         local fontName = db.fontName or "Friz Quadrata"
@@ -54,6 +62,10 @@ function LWT:CreateAlertSystem(key, dbKeyFunc)
         end
         local size = db.fontSize or 36
         alertText:SetFont(fontPath, size, "OUTLINE")
+        local c = db.color
+        if c then
+            alertText:SetTextColor(c.r or 1, c.g or 0.82, c.b or 0)
+        end
         LoadPosition()
     end
 
@@ -61,7 +73,7 @@ function LWT:CreateAlertSystem(key, dbKeyFunc)
         self:UpdateFont()
         fadeOut:Stop()
 
-        alertText:SetText(text or "|cffff2020ALERT!|r")
+        alertText:SetText(StripColorCodes(text) or "ALERT!")
         alertFrame:SetAlpha(1)
         alertFrame:Show()
 
@@ -98,7 +110,7 @@ function LWT:CreateAlertSystem(key, dbKeyFunc)
         fadeOut:Stop()
         if fadeTimer then fadeTimer:Cancel(); fadeTimer = nil end
 
-        alertText:SetText(text or "|cffff2020ALERT!|r")
+        alertText:SetText(StripColorCodes(text) or "ALERT!")
         alertFrame:SetAlpha(1)
         alertFrame:Show()
 

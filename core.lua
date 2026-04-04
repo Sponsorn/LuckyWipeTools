@@ -34,6 +34,7 @@ local ALERT_DEFAULTS = {
     duration = 3,
     fontSize = 36,
     fontName = "Friz Quadrata",
+    color = { r = 1, g = 0.82, b = 0 },
     position = {},
 }
 

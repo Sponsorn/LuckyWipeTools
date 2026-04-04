@@ -303,6 +303,59 @@ local function CreateDropdown(parent, label, x, y, getItemsFunc, getFunc, setFun
 end
 
 -- =========================================================
+-- Widget: Color picker
+-- =========================================================
+local colorPickerCount = 0
+local function CreateColorPicker(parent, label, x, y, getFunc, setFunc)
+    colorPickerCount = colorPickerCount + 1
+
+    local wrapper = CreateFrame("Frame", nil, parent)
+    wrapper:SetSize(280, 24)
+    wrapper:SetPoint("TOPLEFT", x, y)
+
+    local title = wrapper:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    title:SetPoint("LEFT", 0, 0)
+    title:SetText(label)
+
+    local swatch = CreateFrame("Button", "LWT_ColorSwatch_" .. colorPickerCount, wrapper, "BackdropTemplate")
+    swatch:SetSize(20, 16)
+    swatch:SetPoint("LEFT", title, "RIGHT", 8, 0)
+    FlatBackdrop(swatch, { 0.08, 0.08, 0.10, 1 }, { 0.3, 0.3, 0.35, 1 })
+
+    local color = swatch:CreateTexture(nil, "OVERLAY")
+    color:SetPoint("TOPLEFT", 2, -2)
+    color:SetPoint("BOTTOMRIGHT", -2, 2)
+    swatch.color = color
+
+    local function Refresh()
+        local c = getFunc()
+        color:SetColorTexture(c.r or 1, c.g or 1, c.b or 1)
+    end
+
+    swatch:SetScript("OnShow", Refresh)
+    swatch:SetScript("OnClick", function()
+        local c = getFunc()
+        local info = {}
+        info.r = c.r or 1
+        info.g = c.g or 1
+        info.b = c.b or 1
+        info.swatchFunc = function()
+            local r, g, b = ColorPickerFrame:GetColorRGB()
+            setFunc({ r = r, g = g, b = b })
+            Refresh()
+        end
+        info.cancelFunc = function()
+            setFunc({ r = info.r, g = info.g, b = info.b })
+            Refresh()
+        end
+        ColorPickerFrame:SetupColorPickerAndShow(info)
+    end)
+
+    Refresh()
+    return wrapper
+end
+
+-- =========================================================
 -- Widget: Section header
 -- =========================================================
 local function CreateHeader(parent, text, x, y)
@@ -500,6 +553,16 @@ local function AddAlertDisplayWidgets(c, y, dbFunc, alertSystemFunc, testText, p
         end
     )
     y = y - 52
+
+    CreateColorPicker(c, "Color", 8, y,
+        function() return dbFunc().color or { r = 1, g = 0.82, b = 0 } end,
+        function(val)
+            dbFunc().color = val
+            local sys = alertSystemFunc()
+            if sys then sys:UpdateFont() end
+        end
+    )
+    y = y - 30
 
     CreateDropdown(c, "Font", 8, y,
         function() return LWT:GetFontList() end,
