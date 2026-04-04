@@ -195,6 +195,9 @@ frame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 frame:RegisterEvent("CHALLENGE_MODE_START")
 
 frame:SetScript("OnEvent", function(_, event)
+    local db = GetDB()
+    if not db or not db.enabled then return end
+
     if event == "PLAYER_LOGIN" then
         -- Sync with manual /combatlog state
         isLogging = LoggingCombat()
@@ -203,8 +206,7 @@ frame:SetScript("OnEvent", function(_, event)
 
     if event == "CHALLENGE_MODE_START" then
         -- M+ key started — force enable if feature is on
-        local db = GetDB()
-        if db and db.enabled then
+        if db then
             local key = GetInstanceKey()
             if key then
                 db.instances = db.instances or {}
