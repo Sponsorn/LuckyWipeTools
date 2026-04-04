@@ -8,6 +8,7 @@
 ## DefaultState: enabled
 
 core.lua
+versioncheck.lua
 alert.lua
 gateway.lua
 roster.lua

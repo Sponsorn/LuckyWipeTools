@@ -62,6 +62,7 @@ local ALERT_DEFAULTS = {
 }
 
 local defaults = {
+    lastVersionCheck = nil,
     gateway = {
         enabled = true,
         combatOnly = true,
