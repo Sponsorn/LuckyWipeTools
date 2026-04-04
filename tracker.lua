@@ -87,10 +87,12 @@ local function ScanNameplates()
         end
     end
 
-    -- Fire alert when player becomes fixated
-    if playerFixated and not wasFixated then
-        if LWT.trackerAlert then
-            LWT.trackerAlert:Fire("FIXATED ON YOU!")
+    -- Show/hide persistent alert based on fixate state
+    if LWT.trackerAlert then
+        if playerFixated and not wasFixated then
+            LWT.trackerAlert:Show("FIXATED ON YOU!")
+        elseif not playerFixated and wasFixated then
+            LWT.trackerAlert:Hide()
         end
     end
     wasFixated = playerFixated
@@ -107,6 +109,9 @@ local function StopScanning()
         scanTicker = nil
     end
     HideAll()
+    if wasFixated and LWT.trackerAlert then
+        LWT.trackerAlert:Hide()
+    end
     wasFixated = false
 end
 
