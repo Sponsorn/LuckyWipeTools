@@ -21,6 +21,7 @@ local function ResetSlot()
     popup.stackInfo:SetText("Drag an item here")
     popup.status:SetText("")
     popup.inputBox:SetText("1")
+    popup.qtyBox:SetText("0")
     splitState = nil
 end
 
@@ -78,15 +79,15 @@ local function PopulateSlot(source, bag, slot, tab)
         popup.splitToBags = true
         popup.destValue:SetText("My Bags")
         -- Shift split button and status down
-        popup.splitBtn:SetPoint("TOPLEFT", 12, -124)
-        popup.status:SetPoint("TOPLEFT", 12, -156)
+        popup.splitBtn:SetPoint("TOPLEFT", 12, -150)
+        popup.status:SetPoint("TOPLEFT", 12, -182)
     else
         popup.destLabel:Hide()
         popup.destValue:Hide()
         popup.destBtn:Hide()
         -- Shift split button and status up (no dest row)
-        popup.splitBtn:SetPoint("TOPLEFT", 12, -108)
-        popup.status:SetPoint("TOPLEFT", 12, -140)
+        popup.splitBtn:SetPoint("TOPLEFT", 12, -134)
+        popup.status:SetPoint("TOPLEFT", 12, -166)
     end
 
     ClearCursor()
@@ -137,6 +138,9 @@ local function RunSplit()
     local targetSize = tonumber(popup.inputBox:GetText()) or 1
     if targetSize < 1 then targetSize = 1 end
 
+    local maxStacks = tonumber(popup.qtyBox:GetText()) or 0
+    if maxStacks < 1 then maxStacks = nil end -- nil = unlimited
+
     local currentStack = src.stackCount
     if currentStack <= targetSize then
         popup.status:SetText("Nothing to split.")
@@ -147,7 +151,7 @@ local function RunSplit()
     local excluded = {}
     local created = 0
 
-    while currentStack > targetSize do
+    while currentStack > targetSize and (not maxStacks or created < maxStacks) do
         -- Wait for source item to be unlocked
         for attempt = 1, MAX_ITERATIONS do
             if src.source == "guildbank" then
@@ -260,7 +264,7 @@ local function CreatePopup()
     if popup then return popup end
 
     local f = CreateFrame("Frame", "LWT_ItemSplitter", UIParent, "BackdropTemplate")
-    f:SetSize(220, 200)
+    f:SetSize(220, 226)
     f:SetPoint("CENTER")
     f:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
     f:SetBackdropColor(0.05, 0.05, 0.07, 0.95)
@@ -440,9 +444,44 @@ local function CreatePopup()
         self:SetText(val)
     end)
 
+    -- "Quantity:" label + input (how many stacks to split off)
+    local qtyLabel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    qtyLabel:SetPoint("TOPLEFT", 12, -106)
+    qtyLabel:SetText("Quantity:")
+    f.qtyLabel = qtyLabel
+
+    local qtyBox = CreateFrame("EditBox", "LWT_SplitQty", f, "BackdropTemplate")
+    qtyBox:SetSize(50, 22)
+    qtyBox:SetPoint("LEFT", qtyLabel, "RIGHT", 8, 0)
+    qtyBox:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
+    qtyBox:SetBackdropColor(0.08, 0.08, 0.10, 1)
+    qtyBox:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+    qtyBox:SetFontObject("GameFontHighlightSmall")
+    qtyBox:SetJustifyH("CENTER")
+    qtyBox:SetNumeric(true)
+    qtyBox:SetAutoFocus(false)
+    qtyBox:SetMaxLetters(5)
+    qtyBox:SetText("0")
+    qtyBox:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
+    qtyBox:SetScript("OnEnterPressed", function(self) self:ClearFocus() end)
+    f.qtyBox = qtyBox
+
+    local qtyHint = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    qtyHint:SetPoint("LEFT", qtyBox, "RIGHT", 6, 0)
+    qtyHint:SetText("0 = all")
+    qtyHint:SetTextColor(0.4, 0.4, 0.4)
+    f.qtyHint = qtyHint
+
+    qtyBox:EnableMouseWheel(true)
+    qtyBox:SetScript("OnMouseWheel", function(self, delta)
+        local val = (tonumber(self:GetText()) or 0) + delta
+        if val < 0 then val = 0 end
+        self:SetText(val)
+    end)
+
     -- Destination toggle (only visible when source is guild bank)
     local destLabel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    destLabel:SetPoint("TOPLEFT", 12, -106)
+    destLabel:SetPoint("TOPLEFT", 12, -132)
     destLabel:SetText("Split to:")
     destLabel:SetTextColor(0.6, 0.6, 0.6)
     f.destLabel = destLabel
@@ -455,7 +494,7 @@ local function CreatePopup()
 
     local destBtn = CreateFrame("Button", "LWT_SplitDestBtn", f)
     destBtn:SetSize(140, 16)
-    destBtn:SetPoint("TOPLEFT", 12, -100)
+    destBtn:SetPoint("TOPLEFT", 12, -126)
     destBtn:SetHeight(18)
     f.destBtn = destBtn
 
@@ -476,7 +515,7 @@ local function CreatePopup()
     -- Split button
     local splitBtn = CreateFrame("Button", "LWT_SplitBtn", f, "BackdropTemplate")
     splitBtn:SetSize(196, 26)
-    splitBtn:SetPoint("TOPLEFT", 12, -124)
+    splitBtn:SetPoint("TOPLEFT", 12, -150)
     splitBtn:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
     splitBtn:SetBackdropColor(0.12, 0.12, 0.14, 1)
     splitBtn:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
@@ -546,7 +585,7 @@ local function CreatePopup()
 
     -- Status text
     local status = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    status:SetPoint("TOPLEFT", 12, -156)
+    status:SetPoint("TOPLEFT", 12, -182)
     status:SetPoint("RIGHT", f, "RIGHT", -12, 0)
     status:SetJustifyH("LEFT")
     status:SetTextColor(0.6, 0.6, 0.6)
