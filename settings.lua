@@ -328,12 +328,14 @@ local function CreateColorPicker(parent, label, x, y, getFunc, setFunc)
     swatch.color = color
 
     local function Refresh()
+        if not LWT.db then return end
         local c = getFunc()
         color:SetColorTexture(c.r or 1, c.g or 1, c.b or 1)
     end
 
     swatch:SetScript("OnShow", Refresh)
     swatch:SetScript("OnClick", function()
+        if not LWT.db then return end
         local c = getFunc()
         local info = {}
         info.r = c.r or 1
