@@ -2,7 +2,7 @@
 ## Title: LuckyWipeTools
 ## Notes: Raid tools for Lucky Wipe. Gateway alerts, summon helper, vantus rune distribution, combat logging, and item splitting.
 ## X-Curse-Project-ID: 1498910
-## Author: Anton
+## Author: Dede in-game / Sponsorn on curseforge & github
 ## Version: @project-version@
 ## SavedVariables: LuckyWipeToolsDB
 ## DefaultState: enabled
