@@ -270,16 +270,13 @@ end
 local function CreateVantusFrame()
     if frame then return end
 
+    local FLAT = "Interface\\Buttons\\WHITE8x8"
     frame = CreateFrame("Frame", "LWT_VantusFrame", UIParent, "BackdropTemplate")
     frame:SetSize(200, 40)
     frame:SetPoint("TOPRIGHT", UIParent, "TOPRIGHT", -200, -300)
-    frame:SetBackdrop({
-        bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-        edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-        tile = true, tileSize = 16, edgeSize = 12,
-        insets = { left = 3, right = 3, top = 3, bottom = 3 },
-    })
-    frame:SetBackdropColor(0.1, 0.1, 0.1, 0.85)
+    frame:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
+    frame:SetBackdropColor(0.05, 0.05, 0.07, 0.92)
+    frame:SetBackdropBorderColor(0.15, 0.15, 0.18, 1)
     frame:SetFrameStrata("MEDIUM")
     frame:SetMovable(true)
     frame:EnableMouse(true)
