@@ -15,33 +15,27 @@ table.sort(CONSUMABLE_PATTERNS, function(a, b)
     return #a.pattern > #b.pattern
 end)
 
-local STACK_WINDOW = 1.5 -- seconds to collect messages before displaying
-
-local pendingMessages = {}
-local flushTimer = nil
+local activeMessages = {}
 
 local function GetDB()
     return LWT.db and LWT.db.consumables or {}
 end
 
-local function FlushMessages()
-    flushTimer = nil
-    if #pendingMessages == 0 then return end
-
-    local text = table.concat(pendingMessages, "\n")
-    wipe(pendingMessages)
-
+local function ShowMessages()
+    if #activeMessages == 0 then return end
+    local text = table.concat(activeMessages, "\n")
     if LWT.consumablesAlert then
         LWT.consumablesAlert:Fire(text)
     end
 end
 
-local function QueueMessage(msg)
-    table.insert(pendingMessages, msg)
-    if flushTimer then
-        flushTimer:Cancel()
-    end
-    flushTimer = C_Timer.NewTimer(STACK_WINDOW, FlushMessages)
+local function ClearMessages()
+    wipe(activeMessages)
+end
+
+local function AddMessage(msg)
+    table.insert(activeMessages, msg)
+    ShowMessages()
 end
 
 local function MatchConsumable(spellID)
@@ -69,7 +63,7 @@ local function OnSpellCastSucceeded(unit, castGUID, spellID)
     local caster = UnitName(unit)
     if not caster or issecretvalue(caster) then return end
 
-    QueueMessage(caster .. " placed " .. label)
+    AddMessage(caster .. " placed " .. label)
 end
 
 -- Event frame
@@ -78,4 +72,23 @@ eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     OnSpellCastSucceeded(...)
+end)
+
+-- Clear stacked messages when the alert fades/hides
+-- Hook into the alert system's fade completion after it's created
+local hookFrame = CreateFrame("Frame", "LWT_ConsumablesClearHook")
+hookFrame:RegisterEvent("PLAYER_LOGIN")
+hookFrame:SetScript("OnEvent", function()
+    if LWT.consumablesAlert then
+        -- Poll: if alert is hidden and we have messages, clear them
+        C_Timer.NewTicker(0.5, function()
+            if #activeMessages > 0 then
+                local alertFrame = _G["LWT_AlertFrame_consumables"]
+                if alertFrame and not alertFrame:IsShown() then
+                    ClearMessages()
+                end
+            end
+        end)
+    end
+    hookFrame:UnregisterEvent("PLAYER_LOGIN")
 end)
