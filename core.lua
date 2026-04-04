@@ -3,8 +3,13 @@ _G.LuckyWipeTools = LWT
 
 LWT.name = ADDON_NAME
 
+local FONT_DIR = "Interface\\AddOns\\LuckyWipeTools\\Fonts\\"
+
 -- Fallback fonts (used when LibSharedMedia is not available)
 LWT.fallbackFonts = {
+    { name = "Roboto", path = FONT_DIR .. "Roboto-Regular.ttf" },
+    { name = "Roboto SemiBold", path = FONT_DIR .. "Roboto-SemiBold.ttf" },
+    { name = "Roboto Bold", path = FONT_DIR .. "Roboto-Bold.ttf" },
     { name = "Friz Quadrata", path = "Fonts\\FRIZQT__.TTF" },
     { name = "Arial Narrow", path = "Fonts\\ARIALN.TTF" },
     { name = "Morpheus", path = "Fonts\\MORPHEUS.TTF" },
@@ -33,7 +38,7 @@ local ALERT_DEFAULTS = {
     soundName = nil,
     duration = 3,
     fontSize = 36,
-    fontName = "Friz Quadrata",
+    fontName = "Roboto Bold",
     color = { r = 1, g = 0.82, b = 0 },
     position = {},
 }
