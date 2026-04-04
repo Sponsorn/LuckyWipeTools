@@ -18,8 +18,8 @@ local DIFFICULTIES = {
     -- Dungeons
     { key = "dungeonNormal",  label = "Normal Dungeon",     difficultyID = 1,  instanceType = "party" },
     { key = "dungeonHeroic",  label = "Heroic Dungeon",     difficultyID = 2,  instanceType = "party" },
-    { key = "dungeonMythic",  label = "Mythic Dungeon",     difficultyID = 23, instanceType = "party" },
-    { key = "dungeonKeystone", label = "Mythic Keystone",   difficultyID = 8,  instanceType = "party" },
+    { key = "dungeonMythic",  label = "Mythic0",             difficultyID = 23, instanceType = "party" },
+    { key = "dungeonKeystone", label = "Mythic+",           difficultyID = 8,  instanceType = "party" },
     { key = "dungeonFollower", label = "Follower Dungeon",  difficultyID = 205, instanceType = "party" },
 }
 

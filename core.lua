@@ -61,7 +61,17 @@ local defaults = {
             raid = true,
             party = true,
         },
-        difficulties = {}, -- [key] = true/false, defaults to all enabled
+        difficulties = {
+            lfr = false,
+            raidNormal = false,
+            raidHeroic = true,
+            raidMythic = true,
+            dungeonNormal = false,
+            dungeonHeroic = false,
+            dungeonMythic = false,
+            dungeonKeystone = true,
+            dungeonFollower = false,
+        },
         instances = {},     -- [instanceID:difficultyID] = { enabled, name, diffName }
     },
     vantus = {
