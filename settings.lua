@@ -473,92 +473,113 @@ local function AddSidebarButton(key, label)
 end
 
 -- =========================================================
--- Page: Alert Style
+-- Helper: Add alert display settings to a page
 -- =========================================================
-AddSidebarButton("alert", "Alert Style")
-local alertPage = CreatePage("alert")
-local moverActive = false
-local moveBtn, testBtn
-do
-    local c = alertPage.content
-    local y = -4
+local function AddAlertDisplayWidgets(c, y, dbFunc, alertSystemFunc, testText, prefix)
+    CreateHeader(c, "Display", 4, y)
+    y = y - 24
 
     CreateSlider(c, "Duration (seconds)", 8, y, 1, 10, 0.5,
-        function() return LWT.db.alert.duration end,
-        function(val) LWT.db.alert.duration = val end
+        function() return dbFunc().duration end,
+        function(val) dbFunc().duration = val end
     )
     y = y - 52
 
     CreateSlider(c, "Font Size", 8, y, 16, 72, 2,
-        function() return LWT.db.alert.fontSize end,
+        function() return dbFunc().fontSize end,
         function(val)
-            LWT.db.alert.fontSize = val
-            LWT:UpdateAlertFont()
+            dbFunc().fontSize = val
+            local sys = alertSystemFunc()
+            if sys then sys:UpdateFont() end
         end
     )
     y = y - 52
 
     CreateDropdown(c, "Font", 8, y,
         function() return LWT:GetFontList() end,
-        function() return LWT.db.alert.fontName end,
+        function() return dbFunc().fontName end,
         function(name)
-            LWT.db.alert.fontName = name
-            LWT:UpdateAlertFont()
+            dbFunc().fontName = name
+            local sys = alertSystemFunc()
+            if sys then sys:UpdateFont() end
         end
     )
     y = y - 48
 
     CreateDropdown(c, "Sound", 8, y,
         function() return LWT:GetSoundList() end,
-        function() return LWT.db.alert.soundName or "None" end,
+        function() return dbFunc().soundName or "None" end,
         function(name)
+            local db = dbFunc()
             if name == "None" then
-                LWT.db.alert.sound = false
-                LWT.db.alert.soundName = nil
+                db.sound = false
+                db.soundName = nil
             else
-                LWT.db.alert.sound = true
-                LWT.db.alert.soundName = name
+                db.sound = true
+                db.soundName = name
             end
-            local soundPath = LWT:GetSoundFile()
-            if soundPath then PlaySoundFile(soundPath, "Master") end
+            -- Preview sound
+            if db.sound and db.soundName then
+                local sounds = LWT:GetSoundList()
+                for _, entry in ipairs(sounds) do
+                    if entry.name == db.soundName and entry.path then
+                        PlaySoundFile(entry.path, "Master")
+                        break
+                    end
+                end
             end
+        end
     )
     y = y - 56
 
-    CreateHeader(c, "Position", 8, y)
+    CreateHeader(c, "Position", 4, y)
     y = y - 24
 
-    moveBtn = CreateButton("LWT_MoveBtn", c, 130, 24)
+    local moverActive = false
+    local moveBtn = CreateButton("LWT_" .. prefix .. "MoveBtn", c, 130, 24)
     moveBtn:SetPoint("TOPLEFT", 8, y)
     moveBtn:SetText("Unlock Position")
 
-    testBtn = CreateButton("LWT_TestBtn", c, 130, 24)
+    local testBtn = CreateButton("LWT_" .. prefix .. "TestBtn", c, 130, 24)
     testBtn:SetPoint("LEFT", moveBtn, "RIGHT", 8, 0)
-    testBtn:SetText("Test Alert")
+    testBtn:SetText("Test")
 
     moveBtn:SetScript("OnClick", function()
+        local sys = alertSystemFunc()
+        if not sys then return end
         if moverActive then
-            LWT:DisableMover()
+            sys:DisableMover()
             moveBtn:SetText("Unlock Position")
             moverActive = false
         else
-            LWT:EnableMover()
+            sys:EnableMover()
             moveBtn:SetText("Lock Position")
             moverActive = true
         end
     end)
 
     testBtn:SetScript("OnClick", function()
+        local sys = alertSystemFunc()
+        if not sys then return end
         if moverActive then
-            LWT:DisableMover()
+            sys:DisableMover()
             moveBtn:SetText("Unlock Position")
             moverActive = false
         end
-        LWT:FireAlert("|cffff2020FIXATED ON YOU!|r")
+        sys:Fire(testText)
     end)
 
     y = y - 34
-    alertPage:SetContentHeight(math.abs(y) + 10)
+
+    -- Returns y and a cleanup function for OnHide
+    return y, function()
+        if moverActive then
+            local sys = alertSystemFunc()
+            if sys then sys:DisableMover() end
+            moveBtn:SetText("Unlock Position")
+            moverActive = false
+        end
+    end
 end
 
 -- =========================================================
@@ -569,7 +590,16 @@ local gatewayPage = CreatePage("gateway")
 do
     local c = gatewayPage.content
     local y = -4
-    CreateCheckbox(c, "Gateway Ready alert", 4, y,
+
+    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    desc:SetPoint("TOPLEFT", 8, y)
+    desc:SetWidth(CONTENT_WIDTH - 24)
+    desc:SetJustifyH("LEFT")
+    desc:SetText("Alerts you when your Demonic Gateway is ready to be used again.")
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
+
+    CreateCheckbox(c, "Enable", 4, y,
         function() return LWT.db.gateway.enabled end,
         function(val)
             LWT.db.gateway.enabled = val
@@ -585,7 +615,18 @@ do
             LWT:RefreshGateway()
         end
     )
-    y = y - 26
+    y = y - 30
+
+    local endY, gatewayCleanup = AddAlertDisplayWidgets(
+        c, y,
+        function() return LWT.db.gateway.alert end,
+        function() return LWT.gatewayAlert end,
+        "|cff9b59b6GATEWAY READY|r",
+        "Gateway"
+    )
+    y = endY
+
+    gatewayPage:HookScript("OnHide", gatewayCleanup)
     gatewayPage:SetContentHeight(math.abs(y) + 10)
 end
 
@@ -606,6 +647,12 @@ do
     desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
     y = y - (desc:GetStringHeight() + 14)
 
+    CreateCheckbox(c, "Enable", 4, y,
+        function() return LWT.db.summon.enabled end,
+        function(val) LWT.db.summon.enabled = val end
+    )
+    y = y - 30
+
     CreateHeader(c, "Notifications", 4, y)
     y = y - 24
 
@@ -616,17 +663,6 @@ do
         function(val)
             LWT.db.summon = LWT.db.summon or {}
             LWT.db.summon.showPortalPlaced = val
-        end
-    )
-    y = y - 24
-
-    CreateCheckbox(c, "Summon started", 4, y,
-        function()
-            return not LWT.db.summon or LWT.db.summon.showSummonStarted ~= false
-        end,
-        function(val)
-            LWT.db.summon = LWT.db.summon or {}
-            LWT.db.summon.showSummonStarted = val
         end
     )
     y = y - 24
@@ -654,9 +690,139 @@ do
             LWT.db.summon.showRoster = val
         end
     )
+    y = y - 30
+
+    CreateHeader(c, "Roster Position", 4, y)
     y = y - 24
 
+    local rosterMoverActive = false
+    local rosterMoveBtn = CreateButton("LWT_RosterMoveBtn", c, 130, 24)
+    rosterMoveBtn:SetPoint("TOPLEFT", 8, y)
+    rosterMoveBtn:SetText("Unlock Position")
+
+    rosterMoveBtn:SetScript("OnClick", function()
+        if rosterMoverActive then
+            LWT:DisableRosterMover()
+            rosterMoveBtn:SetText("Unlock Position")
+            rosterMoverActive = false
+        else
+            LWT:EnableRosterMover()
+            rosterMoveBtn:SetText("Lock Position")
+            rosterMoverActive = true
+        end
+    end)
+
+    y = y - 34
+
+    local endY, summonCleanup = AddAlertDisplayWidgets(
+        c, y,
+        function() return LWT.db.summon.alert end,
+        function() return LWT.summonAlert end,
+        "|cff9b59b6Portal placed! Click to summon|r",
+        "Summon"
+    )
+    y = endY
+
+    summonPage:HookScript("OnHide", function()
+        if rosterMoverActive then
+            LWT:DisableRosterMover()
+            rosterMoveBtn:SetText("Unlock Position")
+            rosterMoverActive = false
+        end
+        summonCleanup()
+    end)
+
     summonPage:SetContentHeight(math.abs(y) + 10)
+end
+
+-- =========================================================
+-- Page: Vantus Runes
+-- =========================================================
+AddSidebarButton("vantus", "Vantus Runes")
+local vantusPage = CreatePage("vantus")
+do
+    local c = vantusPage.content
+    local y = -4
+
+    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    desc:SetPoint("TOPLEFT", 8, y)
+    desc:SetWidth(CONTENT_WIDTH - 24)
+    desc:SetJustifyH("LEFT")
+    desc:SetText("Request and distribute vantus runes in raid. Players type /lwt vantus to request. Distributors see a roster and click to trade.")
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
+
+    CreateCheckbox(c, "Enable", 4, y,
+        function() return LWT.db.vantus.enabled end,
+        function(val) LWT.db.vantus.enabled = val end
+    )
+    y = y - 30
+
+    CreateHeader(c, "Difficulties", 4, y)
+    y = y - 24
+
+    CreateCheckbox(c, "Heroic", 16, y,
+        function() return LWT.db.vantus.difficulties.heroic end,
+        function(val) LWT.db.vantus.difficulties.heroic = val end
+    )
+    y = y - 24
+
+    CreateCheckbox(c, "Mythic", 16, y,
+        function() return LWT.db.vantus.difficulties.mythic end,
+        function(val) LWT.db.vantus.difficulties.mythic = val end
+    )
+    y = y - 30
+
+    CreateHeader(c, "Roster", 4, y)
+    y = y - 24
+
+    CreateCheckbox(c, "Show roster frame", 4, y,
+        function() return LWT.db.vantus.showRoster end,
+        function(val) LWT.db.vantus.showRoster = val end
+    )
+    y = y - 30
+
+    CreateHeader(c, "Roster Position", 4, y)
+    y = y - 24
+
+    local vantusMoverActive = false
+    local vantusMoveBtn = CreateButton("LWT_VantusMoveBtn", c, 130, 24)
+    vantusMoveBtn:SetPoint("TOPLEFT", 8, y)
+    vantusMoveBtn:SetText("Unlock Position")
+
+    vantusMoveBtn:SetScript("OnClick", function()
+        if vantusMoverActive then
+            LWT:DisableVantusMover()
+            vantusMoveBtn:SetText("Unlock Position")
+            vantusMoverActive = false
+        else
+            LWT:EnableVantusMover()
+            vantusMoveBtn:SetText("Lock Position")
+            vantusMoverActive = true
+        end
+    end)
+
+    y = y - 34
+
+    local endY, vantusCleanup = AddAlertDisplayWidgets(
+        c, y,
+        function() return LWT.db.vantus.alert end,
+        function() return LWT.vantusAlert end,
+        "|cff00ff00Vantus rune requested.|r",
+        "Vantus"
+    )
+    y = endY
+
+    vantusPage:HookScript("OnHide", function()
+        if vantusMoverActive then
+            LWT:DisableVantusMover()
+            vantusMoveBtn:SetText("Unlock Position")
+            vantusMoverActive = false
+        end
+        vantusCleanup()
+    end)
+
+    vantusPage:SetContentHeight(math.abs(y) + 10)
 end
 
 -- =========================================================
@@ -667,7 +833,16 @@ local combatLogPage = CreatePage("combatlog")
 do
     local c = combatLogPage.content
     local y = -4
-    CreateCheckbox(c, "Auto-enable combat logging", 4, y,
+
+    local desc = c:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    desc:SetPoint("TOPLEFT", 8, y)
+    desc:SetWidth(CONTENT_WIDTH - 24)
+    desc:SetJustifyH("LEFT")
+    desc:SetText("Automatically starts and stops combat logging based on instance type and difficulty.")
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
+
+    CreateCheckbox(c, "Enable", 4, y,
         function() return LWT.db.combatLog.enabled end,
         function(val) LWT.db.combatLog.enabled = val end
     )
@@ -720,6 +895,12 @@ do
     desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
     y = y - (desc:GetStringHeight() + 14)
 
+    CreateCheckbox(c, "Enable", 4, y,
+        function() return LWT.db.itemSplitter.enabled end,
+        function(val) LWT.db.itemSplitter.enabled = val end
+    )
+    y = y - 30
+
     CreateHeader(c, "Usage", 4, y)
     y = y - 24
 
@@ -751,17 +932,9 @@ end
 -- =========================================================
 -- Events
 -- =========================================================
-settingsFrame:SetScript("OnHide", function()
-    if moverActive then
-        LWT:DisableMover()
-        moveBtn:SetText("Unlock Position")
-        moverActive = false
-    end
-end)
-
 settingsFrame:SetScript("OnShow", function()
     if not currentPage then
-        ShowPage("alert")
+        ShowPage("gateway")
     end
 end)
 
