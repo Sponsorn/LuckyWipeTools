@@ -63,11 +63,6 @@ local ALERT_DEFAULTS = {
 
 local defaults = {
     lastVersionCheck = nil,
-    tracker = {
-        enabled = true,
-        nameplateFontSize = 14,
-        alert = ALERT_DEFAULTS,
-    },
     gateway = {
         enabled = true,
         combatOnly = true,
@@ -194,9 +189,6 @@ SlashCmdList["LUCKYWIPETOOLS"] = function(msg)
         if LWT.summonAlert then
             LWT.summonAlert:Fire("|cff9b59b6Portal placed! Click to summon|r")
         end
-
-    elseif msg == "test tracker" then
-        LWT:ToggleTrackerTest()
 
     elseif msg == "split" then
         LWT:ToggleSplitter()

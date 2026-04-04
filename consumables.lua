@@ -8,12 +8,18 @@ local CONSUMABLE_PATTERNS = {
     { pattern = "Voidlight Potion Cauldron",    label = "a Voidlight Potion Cauldron. Grab your potions!" },
     { pattern = "Cauldron of Sin'dorei Flasks", label = "a Cauldron of Sin'dorei Flasks. Flask up!" },
     { pattern = "Create Soulwell",              label = "a Soulwell. Come get your cookies!" },
+    { pattern = "Soulwell",                    label = "a Soulwell. Come get your cookies!" },
 }
 
 -- Sort longest patterns first so "Hearty Harandar Celebration" matches before "Harandar Celebration"
 table.sort(CONSUMABLE_PATTERNS, function(a, b)
     return #a.pattern > #b.pattern
 end)
+
+-- Fallback: known spell IDs for consumables that might not match by name
+local SPELL_ID_LABELS = {
+    [29893]  = "a Soulwell. Come get your cookies!",  -- Create Soulwell
+}
 
 local activeMessages = {}
 
@@ -39,6 +45,11 @@ local function AddMessage(msg)
 end
 
 local function MatchConsumable(spellID)
+    -- Check spell ID directly first
+    if SPELL_ID_LABELS[spellID] then
+        return SPELL_ID_LABELS[spellID]
+    end
+    -- Then match by name
     local name = C_Spell.GetSpellName(spellID)
     if not name then return nil end
     for _, entry in ipairs(CONSUMABLE_PATTERNS) do
