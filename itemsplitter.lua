@@ -71,23 +71,15 @@ local function PopulateSlot(source, bag, slot, tab)
         stackCount = stackCount,
     }
 
-    -- Show destination toggle when guild bank is open
+    -- Show appropriate split buttons
     if guildBankOpen then
-        popup.destLabel:Show()
-        popup.destValue:Show()
-        popup.destBtn:Show()
-        popup.splitToBags = true
-        popup.destValue:SetText("My Bags")
-        -- Shift split button and status down
-        popup.splitBtn:SetPoint("TOPLEFT", 12, -150)
-        popup.status:SetPoint("TOPLEFT", 12, -182)
+        popup.splitBtn:Hide()
+        popup.splitToBagsBtn:Show()
+        popup.splitInBankBtn:Show()
     else
-        popup.destLabel:Hide()
-        popup.destValue:Hide()
-        popup.destBtn:Hide()
-        -- Shift split button and status up (no dest row)
-        popup.splitBtn:SetPoint("TOPLEFT", 12, -134)
-        popup.status:SetPoint("TOPLEFT", 12, -166)
+        popup.splitBtn:Show()
+        popup.splitToBagsBtn:Hide()
+        popup.splitInBankBtn:Hide()
     end
 
     ClearCursor()
@@ -264,7 +256,7 @@ local function CreatePopup()
     if popup then return popup end
 
     local f = CreateFrame("Frame", "LWT_ItemSplitter", UIParent, "BackdropTemplate")
-    f:SetSize(220, 226)
+    f:SetSize(220, 200)
     f:SetPoint("CENTER")
     f:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
     f:SetBackdropColor(0.05, 0.05, 0.07, 0.95)
@@ -483,63 +475,45 @@ local function CreatePopup()
         self:SetText(val)
     end)
 
-    -- Destination toggle (only visible when source is guild bank)
-    local destLabel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    destLabel:SetPoint("TOPLEFT", 12, -132)
-    destLabel:SetText("Split to:")
-    destLabel:SetTextColor(0.6, 0.6, 0.6)
-    f.destLabel = destLabel
-
-    local destValue = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    destValue:SetPoint("LEFT", destLabel, "RIGHT", 6, 0)
-    destValue:SetText("My Bags")
-    destValue:SetTextColor(ACCENT[1], ACCENT[2], ACCENT[3])
-    f.destValue = destValue
-
-    local destBtn = CreateFrame("Button", "LWT_SplitDestBtn", f)
-    destBtn:SetSize(140, 16)
-    destBtn:SetPoint("TOPLEFT", 12, -126)
-    destBtn:SetHeight(18)
-    f.destBtn = destBtn
-
-    local splitToBags = true
+    -- Split buttons
     f.splitToBags = true
 
-    destBtn:SetScript("OnClick", function()
-        splitToBags = not splitToBags
-        f.splitToBags = splitToBags
-        destValue:SetText(splitToBags and "My Bags" or "Guild Bank")
-    end)
+    local function MakeSplitButton(name, label, x, y, width)
+        local btn = CreateFrame("Button", name, f, "BackdropTemplate")
+        btn:SetSize(width, 26)
+        btn:SetPoint("TOPLEFT", x, y)
+        btn:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
+        btn:SetBackdropColor(0.12, 0.12, 0.14, 1)
+        btn:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+        btn.text = btn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+        btn.text:SetPoint("CENTER")
+        btn.text:SetText(label)
+        btn:SetScript("OnEnter", function(self)
+            self:SetBackdropColor(0.18, 0.18, 0.20, 1)
+            self:SetBackdropBorderColor(0.4, 0.4, 0.45, 1)
+        end)
+        btn:SetScript("OnLeave", function(self)
+            self:SetBackdropColor(0.12, 0.12, 0.14, 1)
+            self:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
+        end)
+        return btn
+    end
 
-    -- Hide destination row by default (shown when source is guild bank)
-    destLabel:Hide()
-    destValue:Hide()
-    destBtn:Hide()
-
-    -- Split button
-    local splitBtn = CreateFrame("Button", "LWT_SplitBtn", f, "BackdropTemplate")
-    splitBtn:SetSize(196, 26)
-    splitBtn:SetPoint("TOPLEFT", 12, -150)
-    splitBtn:SetBackdrop({ bgFile = FLAT, edgeFile = FLAT, edgeSize = 1 })
-    splitBtn:SetBackdropColor(0.12, 0.12, 0.14, 1)
-    splitBtn:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
-
-    splitBtn.text = splitBtn:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    splitBtn.text:SetPoint("CENTER")
-    splitBtn.text:SetText("Split")
-
-    splitBtn:SetScript("OnEnter", function(self)
-        self:SetBackdropColor(0.18, 0.18, 0.20, 1)
-        self:SetBackdropBorderColor(0.4, 0.4, 0.45, 1)
-    end)
-    splitBtn:SetScript("OnLeave", function(self)
-        self:SetBackdropColor(0.12, 0.12, 0.14, 1)
-        self:SetBackdropBorderColor(0.25, 0.25, 0.28, 1)
-    end)
+    -- Single "Split" button (shown when guild bank is closed)
+    local splitBtn = MakeSplitButton("LWT_SplitBtn", "Split", 12, -134, 196)
     f.splitBtn = splitBtn
 
-    -- Split button click with validation
-    splitBtn:SetScript("OnClick", function()
+    -- Two buttons for guild bank (shown when guild bank is open)
+    local splitToBagsBtn = MakeSplitButton("LWT_SplitToBagsBtn", "Split to Bags", 12, -134, 94)
+    splitToBagsBtn:Hide()
+    f.splitToBagsBtn = splitToBagsBtn
+
+    local splitInBankBtn = MakeSplitButton("LWT_SplitInBankBtn", "Split in Bank", 110, -134, 98)
+    splitInBankBtn:Hide()
+    f.splitInBankBtn = splitInBankBtn
+
+    -- Shared split validation and start
+    local function StartSplit(toBags)
         if not splitState then
             popup.status:SetText("Drop an item first.")
             return
@@ -582,14 +556,19 @@ local function CreatePopup()
             splitState.stackCount = info.stackCount
         end
 
+        f.splitToBags = toBags
         popup.stackInfo:SetText("Stack: " .. splitState.stackCount)
         splitCoroutine = coroutine.create(RunSplit)
         tickFrame:Show()
-    end)
+    end
+
+    splitBtn:SetScript("OnClick", function() StartSplit(true) end)
+    splitToBagsBtn:SetScript("OnClick", function() StartSplit(true) end)
+    splitInBankBtn:SetScript("OnClick", function() StartSplit(false) end)
 
     -- Status text
     local status = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    status:SetPoint("TOPLEFT", 12, -182)
+    status:SetPoint("TOPLEFT", 12, -166)
     status:SetPoint("RIGHT", f, "RIGHT", -12, 0)
     status:SetJustifyH("LEFT")
     status:SetTextColor(0.6, 0.6, 0.6)
