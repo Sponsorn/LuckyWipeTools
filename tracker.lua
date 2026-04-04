@@ -11,46 +11,26 @@ local FONT_PATH = "Interface\\AddOns\\LuckyWipeTools\\Fonts\\Roboto-Bold.ttf"
 
 local scanTicker = nil
 local inEncounter = false
-local nameplateTexts = {} -- [nameplate frame] = fontString
 local wasFixated = false
-local usePlater = false
 
 local function GetDB()
     return LWT.db and LWT.db.tracker or {}
 end
 
--- Detect Plater at runtime
-local function CheckPlater()
-    usePlater = (_G.Plater and C_AddOns.IsAddOnLoaded("Plater")) and true or false
-end
 
--- Get the best frame to anchor text to for a nameplate unit
-local function GetAnchorFrame(unit)
-    local baseFrame = C_NamePlate.GetNamePlateForUnit(unit)
-    if not baseFrame then return nil end
+-- Overlay pool — positioned manually each scan tick
+local overlayPool = {}
+local overlayCount = 0
 
-    -- Plater: use its unitFrame which renders on top
-    if usePlater and baseFrame.unitFrame then
-        return baseFrame.unitFrame
-    end
-
-    return baseFrame
-end
-
--- Get or create a overlay frame with text above a nameplate
-local function GetOrCreateText(anchorFrame)
-    if nameplateTexts[anchorFrame] then
-        return nameplateTexts[anchorFrame]
-    end
+local function GetOverlay(index)
+    if overlayPool[index] then return overlayPool[index] end
 
     local db = GetDB()
     local fontSize = db.nameplateFontSize or 14
 
-    -- Create a separate frame at TOOLTIP strata so it renders above everything
-    local overlay = CreateFrame("Frame", nil, UIParent)
+    local overlay = CreateFrame("Frame", "LWT_NPOverlay_" .. index, UIParent)
     overlay:SetSize(200, 20)
     overlay:SetFrameStrata("TOOLTIP")
-    overlay:SetPoint("BOTTOM", anchorFrame, "TOP", 0, 2)
 
     local text = overlay:CreateFontString(nil, "OVERLAY")
     text:SetFont(FONT_PATH, fontSize, "OUTLINE")
@@ -60,7 +40,7 @@ local function GetOrCreateText(anchorFrame)
     overlay.text = text
     overlay:Hide()
 
-    nameplateTexts[anchorFrame] = overlay
+    overlayPool[index] = overlay
     return overlay
 end
 
@@ -68,7 +48,7 @@ end
 local function RefreshFontSize()
     local db = GetDB()
     local fontSize = db.nameplateFontSize or 14
-    for _, overlay in pairs(nameplateTexts) do
+    for _, overlay in pairs(overlayPool) do
         overlay.text:SetFont(FONT_PATH, fontSize, "OUTLINE")
     end
 end
@@ -77,14 +57,13 @@ function LWT:RefreshTrackerFontSize()
     RefreshFontSize()
 end
 
--- Hide all nameplate texts
+-- Hide all overlays
 local function HideAll()
-    for _, text in pairs(nameplateTexts) do
-        text:Hide()
+    for _, overlay in pairs(overlayPool) do
+        overlay:Hide()
     end
 end
 
-local debugOnce = true
 local function ScanNameplates()
     if not testMode then
         local db = GetDB()
@@ -95,6 +74,7 @@ local function ScanNameplates()
 
     local playerFixated = false
     local found = 0
+    local shown = 0
 
     for i = 1, 40 do
         local unit = "nameplate" .. i
@@ -102,26 +82,20 @@ local function ScanNameplates()
             found = found + 1
             local target = unit .. "target"
             local hasTarget = UnitExists(target)
-            local anchorFrame = GetAnchorFrame(unit)
-
-            if debugOnce then
-                local mobName = UnitName(unit) or "?"
-                LWT:Print(unit .. " = " .. mobName
-                    .. " | target=" .. tostring(hasTarget)
-                    .. " | anchor=" .. tostring(anchorFrame ~= nil)
-                    .. " | plater=" .. tostring(usePlater)
-                    .. " | .unitFrame=" .. tostring(anchorFrame and C_NamePlate.GetNamePlateForUnit(unit) and C_NamePlate.GetNamePlateForUnit(unit).unitFrame ~= nil))
-            end
 
             if hasTarget then
                 local targetName = UnitName(target)
                 if targetName and not issecretvalue(targetName) then
-                    if anchorFrame then
-                        local overlay = GetOrCreateText(anchorFrame)
+                    local baseFrame = C_NamePlate.GetNamePlateForUnit(unit)
+                    if baseFrame then
+                        shown = shown + 1
+                        local overlay = GetOverlay(shown)
                         local classBase = UnitClassBase(target)
                         local classColor = classBase and C_ClassColor.GetClassColor(classBase)
                         local colored = classColor and classColor:WrapTextInColorCode(targetName) or targetName
                         overlay.text:SetText(colored)
+                        overlay:ClearAllPoints()
+                        overlay:SetPoint("BOTTOM", baseFrame, "TOP", 0, 0)
                         overlay:Show()
                     end
 
@@ -131,11 +105,6 @@ local function ScanNameplates()
                 end
             end
         end
-    end
-
-    if debugOnce then
-        LWT:Print("Scan found " .. found .. " enemy nameplates")
-        debugOnce = false
     end
 
     -- Show/hide persistent alert based on fixate state
@@ -151,7 +120,6 @@ end
 
 local function StartScanning()
     if scanTicker then return end
-    CheckPlater()
     scanTicker = C_Timer.NewTicker(SCAN_INTERVAL, ScanNameplates)
 end
 
@@ -188,14 +156,10 @@ frame:RegisterEvent("ENCOUNTER_END")
 
 frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ENCOUNTER_START" then
-        local encounterID = ...
         local db = GetDB()
-        LWT:Print("ENCOUNTER_START id=" .. tostring(encounterID) .. " enabled=" .. tostring(db.enabled))
         if db.enabled then
             inEncounter = true
-            debugOnce = true
             StartScanning()
-            LWT:Print("Tracker started")
         end
     elseif event == "ENCOUNTER_END" then
         inEncounter = false
