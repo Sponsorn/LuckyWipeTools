@@ -93,21 +93,10 @@ local function ScanBuffs()
                         changed = true
                     end
                 else
-                    if rosterData[name] then
-                        if not rosterData[name].noBuff then
-                            rosterData[name].noBuff = true
-                            rosterData[name].unit = unit
-                            changed = true
-                        end
-                    else
-                        local _, class = UnitClass(unit)
-                        rosterData[name] = {
-                            name = name,
-                            class = class,
-                            unit = unit,
-                            requested = false,
-                            noBuff = true,
-                        }
+                    -- Only update existing entries (requested players) — don't auto-add everyone missing the buff
+                    if rosterData[name] and not rosterData[name].noBuff then
+                        rosterData[name].noBuff = true
+                        rosterData[name].unit = unit
                         changed = true
                     end
                 end
