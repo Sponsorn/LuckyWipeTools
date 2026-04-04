@@ -23,6 +23,10 @@ local frame, titleText, portalText
 local rows = {}
 local MAX_ROWS = 40
 
+local function GetDB()
+    return LWT.db and LWT.db.summon or {}
+end
+
 local function CreateRosterFrame()
     if frame then return end
 
@@ -143,10 +147,6 @@ local function UpdateDisplay(outside)
 
     frame:SetHeight(height)
     frame:Show()
-end
-
-local function GetDB()
-    return LWT.db and LWT.db.summon or {}
 end
 
 local function Scan()
