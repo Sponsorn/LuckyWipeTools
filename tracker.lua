@@ -179,13 +179,18 @@ frame:RegisterEvent("ENCOUNTER_END")
 
 frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ENCOUNTER_START" then
+        local encounterID = ...
         local db = GetDB()
+        LWT:Print("ENCOUNTER_START id=" .. tostring(encounterID) .. " enabled=" .. tostring(db.enabled))
         if db.enabled then
             inEncounter = true
+            debugOnce = true
             StartScanning()
+            LWT:Print("Tracker started")
         end
     elseif event == "ENCOUNTER_END" then
         inEncounter = false
         StopScanning()
+        LWT:Print("Tracker stopped")
     end
 end)
