@@ -15,8 +15,33 @@ table.sort(CONSUMABLE_PATTERNS, function(a, b)
     return #a.pattern > #b.pattern
 end)
 
+local STACK_WINDOW = 1.5 -- seconds to collect messages before displaying
+
+local pendingMessages = {}
+local flushTimer = nil
+
 local function GetDB()
     return LWT.db and LWT.db.consumables or {}
+end
+
+local function FlushMessages()
+    flushTimer = nil
+    if #pendingMessages == 0 then return end
+
+    local text = table.concat(pendingMessages, "\n")
+    wipe(pendingMessages)
+
+    if LWT.consumablesAlert then
+        LWT.consumablesAlert:Fire(text)
+    end
+end
+
+local function QueueMessage(msg)
+    table.insert(pendingMessages, msg)
+    if flushTimer then
+        flushTimer:Cancel()
+    end
+    flushTimer = C_Timer.NewTimer(STACK_WINDOW, FlushMessages)
 end
 
 local function MatchConsumable(spellID)
@@ -44,9 +69,7 @@ local function OnSpellCastSucceeded(unit, castGUID, spellID)
     local caster = UnitName(unit)
     if not caster or issecretvalue(caster) then return end
 
-    if LWT.consumablesAlert then
-        LWT.consumablesAlert:Fire(caster .. " placed " .. label)
-    end
+    QueueMessage(caster .. " placed " .. label)
 end
 
 -- Event frame
