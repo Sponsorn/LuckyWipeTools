@@ -10,6 +10,7 @@ local MYTHIC_DIFF = 16
 -- State
 local rosterData = {}    -- [playerName] = { name, class, unit, requested, noBuff }
 local pendingRequest = false
+local rosterActive = false -- true after VANTUS:NOTIFY, enables full buff scan
 local commQueue = {}
 local tradeTarget = nil
 
@@ -93,10 +94,22 @@ local function ScanBuffs()
                         changed = true
                     end
                 else
-                    -- Only update existing entries (requested players) — don't auto-add everyone missing the buff
-                    if rosterData[name] and not rosterData[name].noBuff then
-                        rosterData[name].noBuff = true
-                        rosterData[name].unit = unit
+                    if rosterData[name] then
+                        if not rosterData[name].noBuff then
+                            rosterData[name].noBuff = true
+                            rosterData[name].unit = unit
+                            changed = true
+                        end
+                    elseif rosterActive then
+                        -- Roster is active (notify sent) — show everyone missing the buff
+                        local _, class = UnitClass(unit)
+                        rosterData[name] = {
+                            name = name,
+                            class = class,
+                            unit = unit,
+                            requested = false,
+                            noBuff = true,
+                        }
                         changed = true
                     end
                 end
@@ -175,6 +188,8 @@ local function OnAddonMessage(prefix, message, channel, sender)
         LWT:UpdateVantusRoster()
 
     elseif message == "VANTUS:NOTIFY" then
+        rosterActive = true
+        ScanBuffs()
         if LWT.vantusAlert then
             LWT.vantusAlert:Fire("Vantus runes available -- type /lwt vantus to request")
         end
@@ -182,6 +197,7 @@ local function OnAddonMessage(prefix, message, channel, sender)
     elseif message == "VANTUS:CLEAR" then
         wipe(rosterData)
         pendingRequest = false
+        rosterActive = false
         LWT:UpdateVantusRoster()
     end
 end
@@ -319,6 +335,12 @@ function LWT:UpdateVantusRoster()
 
     local db = GetDB()
     if not db.enabled or not db.showRoster then
+        frame:Hide()
+        return
+    end
+
+    -- Only leaders/assistants see the roster
+    if not UnitIsGroupLeader("player") and not UnitIsGroupAssistant("player") then
         frame:Hide()
         return
     end
@@ -505,6 +527,7 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         if not IsInRaid() then
             wipe(rosterData)
             pendingRequest = false
+            rosterActive = false
             if buffTicker then buffTicker:Cancel(); buffTicker = nil end
             if frame then frame:Hide() end
             return
