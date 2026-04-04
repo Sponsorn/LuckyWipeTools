@@ -147,7 +147,6 @@ end
 -- Stub functions (overridden by other files as they load)
 function LWT:OpenSettings() end
 function LWT:RefreshGateway() end
-function LWT:ToggleVantusRequest() end
 
 -- Main event frame
 local frame = CreateFrame("Frame", "LuckyWipeToolsFrame")
