@@ -61,8 +61,10 @@ local function HideAll()
 end
 
 local function ScanNameplates()
-    local db = GetDB()
-    if not db.enabled then return end
+    if not testMode then
+        local db = GetDB()
+        if not db.enabled then return end
+    end
 
     HideAll()
 
