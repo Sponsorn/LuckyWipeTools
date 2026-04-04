@@ -28,26 +28,31 @@ end
 LWT.GATEWAY_ITEM_ID = 188152
 
 -- DB setup
+local ALERT_DEFAULTS = {
+    sound = false,
+    soundName = nil,
+    duration = 3,
+    fontSize = 36,
+    fontName = "Friz Quadrata",
+    position = {},
+}
+
 local defaults = {
-    alert = {
-        sound = false,
-        soundName = nil, -- name from LibSharedMedia or fallback list
-        duration = 3,
-        fontSize = 36,
-        fontName = "Friz Quadrata", -- saved by name so it survives list changes
-        position = {},  -- { point, x, y }
-    },
     gateway = {
         enabled = true,
         combatOnly = true,
+        alert = ALERT_DEFAULTS,
     },
     summon = {
+        enabled = true,
         showPortalPlaced = true,
-        showSummonStarted = true,
         showStatus = true,
         showRoster = true,
+        rosterPosition = {},
+        alert = ALERT_DEFAULTS,
     },
     itemSplitter = {
+        enabled = true,
         popupPos = nil,
     },
     combatLog = {
@@ -58,6 +63,16 @@ local defaults = {
         },
         difficulties = {}, -- [key] = true/false, defaults to all enabled
         instances = {},     -- [instanceID:difficultyID] = { enabled, name, diffName }
+    },
+    vantus = {
+        enabled = true,
+        showRoster = true,
+        difficulties = {
+            heroic = true,
+            mythic = true,
+        },
+        rosterPosition = {},
+        alert = ALERT_DEFAULTS,
     },
 }
 
@@ -130,10 +145,9 @@ function LWT:Print(msg)
 end
 
 -- Stub functions (overridden by other files as they load)
-function LWT:FireAlert() end
-function LWT:UpdateAlertFont() end
 function LWT:OpenSettings() end
 function LWT:RefreshGateway() end
+function LWT:ToggleVantusRequest() end
 
 -- Main event frame
 local frame = CreateFrame("Frame", "LuckyWipeToolsFrame")
@@ -142,6 +156,7 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
         LWT:SetupDB()
+        C_ChatInfo.RegisterAddonMessagePrefix("LWT")
         LWT:Print("Loaded. Type /lwt for help.")
         frame:UnregisterEvent("ADDON_LOADED")
     end
@@ -153,18 +168,23 @@ SlashCmdList["LUCKYWIPETOOLS"] = function(msg)
     msg = (msg or ""):lower():gsub("^%s+", ""):gsub("%s+$", "")
 
     if msg == "test" then
-        LWT:FireAlert("|cffff2020FIXATED ON YOU!|r")
+        if LWT.gatewayAlert then
+            LWT.gatewayAlert:Fire("|cff9b59b6GATEWAY READY|r")
+        end
 
-    elseif msg == "test rift" then
-        local role = GetSpecializationRole(GetSpecialization())
-        local text = role == "HEALER" and "|cff00ff00Go to Triangle|r" or "|cffff2020Go to X|r"
-        LWT:FireAlert(text)
+    elseif msg == "test summon" then
+        if LWT.summonAlert then
+            LWT.summonAlert:Fire("|cff9b59b6Portal placed! Click to summon|r")
+        end
 
     elseif msg == "split" then
         LWT:ToggleSplitter()
 
     elseif msg == "log" then
         LWT:ToggleInstanceLogging()
+
+    elseif msg == "vantus" then
+        LWT:ToggleVantusRequest()
 
     else
         LWT:OpenSettings()
