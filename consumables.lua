@@ -3,10 +3,11 @@ local ADDON_NAME, LWT = ...
 -- Tracked consumable keywords and their display labels
 -- We match against the spell name from UNIT_SPELLCAST_SUCCEEDED
 local CONSUMABLE_PATTERNS = {
-    { pattern = "Hearty Harandar Celebration",  label = "Hearty Harandar Celebration" },
-    { pattern = "Harandar Celebration",         label = "Harandar Celebration" },
-    { pattern = "Voidlight Potion Cauldron",    label = "Voidlight Potion Cauldron" },
-    { pattern = "Cauldron of Sin'dorei Flasks", label = "Cauldron of Sin'dorei Flasks" },
+    { pattern = "Hearty Harandar Celebration",  label = "a Hearty Harandar Celebration. Eat up!" },
+    { pattern = "Harandar Celebration",         label = "a Harandar Celebration. Eat up!" },
+    { pattern = "Voidlight Potion Cauldron",    label = "a Voidlight Potion Cauldron. Grab your potions!" },
+    { pattern = "Cauldron of Sin'dorei Flasks", label = "a Cauldron of Sin'dorei Flasks. Flask up!" },
+    { pattern = "Create Soulwell",              label = "a Soulwell. Come get your cookies!" },
 }
 
 -- Sort longest patterns first so "Hearty Harandar Celebration" matches before "Harandar Celebration"
