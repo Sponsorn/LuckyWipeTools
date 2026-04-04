@@ -37,7 +37,7 @@ local function GetAnchorFrame(unit)
     return baseFrame
 end
 
--- Get or create a font string for a nameplate frame
+-- Get or create a overlay frame with text above a nameplate
 local function GetOrCreateText(anchorFrame)
     if nameplateTexts[anchorFrame] then
         return nameplateTexts[anchorFrame]
@@ -45,22 +45,31 @@ local function GetOrCreateText(anchorFrame)
 
     local db = GetDB()
     local fontSize = db.nameplateFontSize or 14
-    local text = anchorFrame:CreateFontString(nil, "OVERLAY")
-    text:SetFont(FONT_PATH, fontSize, "OUTLINE")
-    text:SetPoint("BOTTOM", anchorFrame, "TOP", 0, 2)
-    text:SetDrawLayer("OVERLAY", 7)
-    text:Hide()
 
-    nameplateTexts[anchorFrame] = text
-    return text
+    -- Create a separate frame at TOOLTIP strata so it renders above everything
+    local overlay = CreateFrame("Frame", nil, UIParent)
+    overlay:SetSize(200, 20)
+    overlay:SetFrameStrata("TOOLTIP")
+    overlay:SetPoint("BOTTOM", anchorFrame, "TOP", 0, 2)
+
+    local text = overlay:CreateFontString(nil, "OVERLAY")
+    text:SetFont(FONT_PATH, fontSize, "OUTLINE")
+    text:SetPoint("CENTER")
+    text:Show()
+
+    overlay.text = text
+    overlay:Hide()
+
+    nameplateTexts[anchorFrame] = overlay
+    return overlay
 end
 
--- Update font size on all existing texts
+-- Update font size on all existing overlays
 local function RefreshFontSize()
     local db = GetDB()
     local fontSize = db.nameplateFontSize or 14
-    for _, text in pairs(nameplateTexts) do
-        text:SetFont(FONT_PATH, fontSize, "OUTLINE")
+    for _, overlay in pairs(nameplateTexts) do
+        overlay.text:SetFont(FONT_PATH, fontSize, "OUTLINE")
     end
 end
 
@@ -108,12 +117,12 @@ local function ScanNameplates()
                 local targetName = UnitName(target)
                 if targetName and not issecretvalue(targetName) then
                     if anchorFrame then
-                        local text = GetOrCreateText(anchorFrame)
+                        local overlay = GetOrCreateText(anchorFrame)
                         local classBase = UnitClassBase(target)
                         local classColor = classBase and C_ClassColor.GetClassColor(classBase)
                         local colored = classColor and classColor:WrapTextInColorCode(targetName) or targetName
-                        text:SetText(colored)
-                        text:Show()
+                        overlay.text:SetText(colored)
+                        overlay:Show()
                     end
 
                     if UnitIsUnit(target, "player") then
