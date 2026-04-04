@@ -3,39 +3,59 @@ local ADDON_NAME, LWT = ...
 -- =========================================================
 -- Nameplate target tracker — shows who enemy mobs are targeting
 -- Works by scanning nameplate units for their targets
+-- Supports Plater and default Blizzard nameplates
 -- =========================================================
 
 local SCAN_INTERVAL = 0.1
-local VORASIUS_ENCOUNTER = 3177
 local FONT_PATH = "Interface\\AddOns\\LuckyWipeTools\\Fonts\\Roboto-Bold.ttf"
 
 local scanTicker = nil
 local inEncounter = false
 local nameplateTexts = {} -- [nameplate frame] = fontString
 local wasFixated = false
+local usePlater = false
 
 local function GetDB()
     return LWT.db and LWT.db.tracker or {}
 end
 
--- Get or create a font string for a nameplate frame
-local function GetOrCreateText(nameplate)
-    if nameplateTexts[nameplate] then
-        return nameplateTexts[nameplate]
+-- Detect Plater at runtime
+local function CheckPlater()
+    usePlater = (_G.Plater and C_AddOns.IsAddOnLoaded("Plater")) and true or false
+end
+
+-- Get the best frame to anchor text to for a nameplate unit
+local function GetAnchorFrame(unit)
+    local baseFrame = C_NamePlate.GetNamePlateForUnit(unit)
+    if not baseFrame then return nil end
+
+    -- Plater: use its unitFrame which renders on top
+    if usePlater and baseFrame.unitFrame then
+        return baseFrame.unitFrame
     end
 
-    local text = nameplate:CreateFontString(nil, "OVERLAY")
+    return baseFrame
+end
+
+-- Get or create a font string for a nameplate frame
+local function GetOrCreateText(anchorFrame)
+    if nameplateTexts[anchorFrame] then
+        return nameplateTexts[anchorFrame]
+    end
+
+    local text = anchorFrame:CreateFontString(nil, "OVERLAY")
     text:SetFont(FONT_PATH, 14, "OUTLINE")
-    text:SetPoint("BOTTOM", nameplate, "TOP", 0, 2)
+    text:SetPoint("BOTTOM", anchorFrame, "TOP", 0, 2)
+    text:SetDrawLayer("OVERLAY", 7)
     text:Hide()
 
-    nameplateTexts[nameplate] = text
+    nameplateTexts[anchorFrame] = text
     return text
 end
 
 -- Hide all nameplate texts
 local function HideAll()
-    for nameplate, text in pairs(nameplateTexts) do
+    for _, text in pairs(nameplateTexts) do
         text:Hide()
     end
 end
@@ -44,7 +64,6 @@ local function ScanNameplates()
     local db = GetDB()
     if not db.enabled then return end
 
-    -- Hide all first, then show active ones
     HideAll()
 
     local playerFixated = false
@@ -56,9 +75,9 @@ local function ScanNameplates()
             if UnitExists(target) then
                 local targetName = UnitName(target)
                 if targetName and not issecretvalue(targetName) then
-                    local nameplate = C_NamePlate.GetNamePlateForUnit(unit)
-                    if nameplate then
-                        local text = GetOrCreateText(nameplate)
+                    local anchorFrame = GetAnchorFrame(unit)
+                    if anchorFrame then
+                        local text = GetOrCreateText(anchorFrame)
                         local classBase = UnitClassBase(target)
                         local classColor = classBase and C_ClassColor.GetClassColor(classBase)
                         local colored = classColor and classColor:WrapTextInColorCode(targetName) or targetName
@@ -66,7 +85,6 @@ local function ScanNameplates()
                         text:Show()
                     end
 
-                    -- Check if targeting the player
                     if UnitIsUnit(target, "player") then
                         playerFixated = true
                     end
@@ -88,6 +106,7 @@ end
 
 local function StartScanning()
     if scanTicker then return end
+    CheckPlater()
     scanTicker = C_Timer.NewTicker(SCAN_INTERVAL, ScanNameplates)
 end
 
@@ -110,19 +129,13 @@ frame:RegisterEvent("ENCOUNTER_END")
 
 frame:SetScript("OnEvent", function(_, event, ...)
     if event == "ENCOUNTER_START" then
-        local encounterID = ...
-        LWT:Print("Encounter started: " .. tostring(encounterID) .. " (type: " .. type(encounterID) .. ")")
-        if encounterID == VORASIUS_ENCOUNTER then
-            local db = GetDB()
-            if db.enabled then
-                inEncounter = true
-                StartScanning()
-                LWT:Print("Tracker scanning started")
-            end
+        local db = GetDB()
+        if db.enabled then
+            inEncounter = true
+            StartScanning()
         end
     elseif event == "ENCOUNTER_END" then
         inEncounter = false
         StopScanning()
-        LWT:Print("Tracker scanning stopped")
     end
 end)
