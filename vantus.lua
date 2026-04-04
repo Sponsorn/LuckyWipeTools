@@ -56,11 +56,27 @@ end
 -- =========================================================
 -- Buff scanning
 -- =========================================================
+-- Derive localized vantus rune name from a known old spell (MRT's approach)
+local vantusPattern
+do
+    local name = GetSpellInfo(237825) -- "Vantus Rune: Kil'jaeden" or localized equivalent
+    if name then
+        local baseName = name:match("^(.-)[:%-：]")
+        if baseName then
+            vantusPattern = "^" .. baseName
+        end
+    end
+    if not vantusPattern then
+        vantusPattern = "^Vantus Rune"
+    end
+end
+
 local function HasVantusBuff(unit)
+    if C_Secrets and C_Secrets.ShouldAurasBeSecret() then return false end
     for i = 1, 40 do
         local aura = C_UnitAuras.GetBuffDataByIndex(unit, i)
         if not aura then break end
-        if aura.name and aura.name:find("Vantus Rune") then
+        if aura.name and type(aura.name) == "string" and aura.name:find(vantusPattern) then
             return true
         end
     end
