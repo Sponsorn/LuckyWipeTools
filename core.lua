@@ -129,6 +129,8 @@ local defaults = {
         textColor        = { r = 1, g = 1, b = 1 },
         tickColor        = { r = 1, g = 1, b = 1 },
         barTexture       = nil,
+        fontName         = "Roboto",
+        fontSize         = 11,
         showIcon          = true,
         showSpellName     = true,
         showTimeRemaining = true,

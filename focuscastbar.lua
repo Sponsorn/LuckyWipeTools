@@ -113,9 +113,15 @@ local function UpdateLayout(db)
     borderFrame:SetAllPoints(progressBar)
 
     -- Text
-    local fontSize = math.max(9, math.floor(h * 0.5))
-    spellNameText:SetFont(DEFAULT_FONT, fontSize, "OUTLINE")
-    timeText:SetFont(DEFAULT_FONT, fontSize, "OUTLINE")
+    local fontName = db.fontName or "Roboto"
+    local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
+    local fontPath = DEFAULT_FONT
+    if LSM then
+        fontPath = LSM:Fetch("font", fontName) or DEFAULT_FONT
+    end
+    local fontSize = db.fontSize or 11
+    spellNameText:SetFont(fontPath, fontSize, "OUTLINE")
+    timeText:SetFont(fontPath, fontSize, "OUTLINE")
 
     local tc = db.textColor
     spellNameText:SetTextColor(tc.r, tc.g, tc.b)

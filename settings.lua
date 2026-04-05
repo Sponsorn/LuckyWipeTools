@@ -1220,6 +1220,25 @@ do
     )
     y = y - 30
 
+    CreateDropdown(c, "Font", 8, y,
+        function() return LWT:GetFontList() end,
+        function() return LWT.db.focusCastBar.fontName or "Roboto" end,
+        function(name)
+            LWT.db.focusCastBar.fontName = name
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 40
+
+    CreateSlider(c, "Font Size", 8, y, 8, 24, 1,
+        function() return LWT.db.focusCastBar.fontSize or 11 end,
+        function(val)
+            LWT.db.focusCastBar.fontSize = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 52
+
     -- BEHAVIOR
     CreateHeader(c, "Behavior", 4, y)
     y = y - 24
