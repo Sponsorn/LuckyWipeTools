@@ -128,6 +128,7 @@ local defaults = {
         bgAlpha          = 0.8,
         textColor        = { r = 1, g = 1, b = 1 },
         tickColor        = { r = 1, g = 1, b = 1 },
+        barTexture       = nil,
         showIcon          = true,
         showSpellName     = true,
         showTimeRemaining = true,

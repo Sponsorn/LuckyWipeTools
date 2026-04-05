@@ -71,6 +71,14 @@ local function UpdateLayout(db)
     -- Background
     castBarFrame.bg:SetVertexColor(db.bgColor.r, db.bgColor.g, db.bgColor.b, db.bgAlpha or 0.8)
 
+    -- Bar texture
+    local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
+    local texturePath = "Interface\\TargetingFrame\\UI-StatusBar"
+    if db.barTexture and LSM then
+        texturePath = LSM:Fetch("statusbar", db.barTexture) or texturePath
+    end
+    progressBar:SetStatusBarTexture(texturePath)
+
     -- Progress bar
     progressBar:ClearAllPoints()
     if showIc then

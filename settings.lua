@@ -1152,6 +1152,25 @@ do
     )
     y = y - 52
 
+    CreateDropdown(c, "Bar Texture", 8, y,
+        function()
+            local items = {}
+            local LSM = LibStub and LibStub("LibSharedMedia-3.0", true)
+            if LSM then
+                for _, name in ipairs(LSM:List("statusbar") or {}) do
+                    table.insert(items, { name = name, path = name })
+                end
+            end
+            return items
+        end,
+        function() return LWT.db.focusCastBar.barTexture or "Blizzard" end,
+        function(val)
+            LWT.db.focusCastBar.barTexture = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 40
+
     -- ICON & TEXT
     CreateHeader(c, "Icon & Text", 4, y)
     y = y - 24
