@@ -1295,7 +1295,7 @@ do
     y = y - 30
 
     -- ONLY SHOW IN
-    CreateHeader(c, "Only Show In", 4, y)
+    CreateHeader(c, "Active In", 4, y)
     y = y - 24
 
     local function instanceGet(key, default)
