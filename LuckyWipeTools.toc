@@ -7,6 +7,7 @@
 ## SavedVariables: LuckyWipeToolsDB
 ## DefaultState: enabled
 
+Libs/InterruptSpells.lua
 core.lua
 versioncheck.lua
 alert.lua
@@ -16,4 +17,5 @@ vantus.lua
 consumables.lua
 combatlog.lua
 itemsplitter.lua
+focuscastbar.lua
 settings.lua
