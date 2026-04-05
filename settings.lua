@@ -1056,6 +1056,241 @@ do
 end
 
 -- =========================================================
+-- Page: Focus Cast Bar
+-- =========================================================
+AddSidebarButton("focuscastbar", "Focus Cast Bar")
+local fcbPage = CreatePage("focuscastbar")
+do
+    local c = fcbPage.content
+    local y = -4
+
+    local desc = c:CreateFontString(nil, "OVERLAY", "LWT_Body")
+    desc:SetPoint("TOPLEFT", 8, y)
+    desc:SetWidth(CONTENT_WIDTH - 24)
+    desc:SetJustifyH("LEFT")
+    desc:SetText("Tracks your focus target's casts. Bar color reflects whether your interrupt is ready.")
+    desc:SetTextColor(TEXT_DIM[1], TEXT_DIM[2], TEXT_DIM[3])
+    y = y - (desc:GetStringHeight() + 14)
+
+    CreateCheckbox(c, "Enable", 4, y,
+        function() return LWT.db.focusCastBar.enabled end,
+        function(val)
+            LWT.db.focusCastBar.enabled = val
+        end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Unlock (show preview & allow moving/resizing)", 4, y,
+        function() return not LWT.db.focusCastBar.locked end,
+        function(val)
+            LWT:SetFocusCastBarLocked(not val)
+        end
+    )
+    y = y - 30
+
+    -- APPEARANCE
+    CreateHeader(c, "Appearance", 4, y)
+    y = y - 24
+
+    CreateColorPicker(c, "Ready Color", 8, y,
+        function() return LWT.db.focusCastBar.barReadyColor end,
+        function(val)
+            LWT.db.focusCastBar.barReadyColor = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 30
+
+    CreateColorPicker(c, "On Cooldown Color", 8, y,
+        function() return LWT.db.focusCastBar.barCdColor end,
+        function(val)
+            LWT.db.focusCastBar.barCdColor = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 30
+
+    CreateColorPicker(c, "Non-Interruptible Color", 8, y,
+        function() return LWT.db.focusCastBar.nonIntColor end,
+        function(val)
+            LWT.db.focusCastBar.nonIntColor = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 30
+
+    CreateColorPicker(c, "Background Color", 8, y,
+        function() return LWT.db.focusCastBar.bgColor end,
+        function(val)
+            LWT.db.focusCastBar.bgColor = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 30
+
+    CreateSlider(c, "Opacity", 8, y, 0, 100, 1,
+        function() return math.floor((LWT.db.focusCastBar.bgAlpha or 0.8) * 100 + 0.5) end,
+        function(val)
+            LWT.db.focusCastBar.bgAlpha = val / 100
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 52
+
+    -- ICON & TEXT
+    CreateHeader(c, "Icon & Text", 4, y)
+    y = y - 24
+
+    CreateCheckbox(c, "Show Icon", 4, y,
+        function() return LWT.db.focusCastBar.showIcon ~= false end,
+        function(val)
+            LWT.db.focusCastBar.showIcon = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Show Spell Name", 4, y,
+        function() return LWT.db.focusCastBar.showSpellName ~= false end,
+        function(val)
+            LWT.db.focusCastBar.showSpellName = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Show Time Remaining", 4, y,
+        function() return LWT.db.focusCastBar.showTimeRemaining ~= false end,
+        function(val)
+            LWT.db.focusCastBar.showTimeRemaining = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 30
+
+    -- BEHAVIOR
+    CreateHeader(c, "Behavior", 4, y)
+    y = y - 24
+
+    CreateCheckbox(c, "Show Empower Stages", 4, y,
+        function() return LWT.db.focusCastBar.showEmpowerStages ~= false end,
+        function(val) LWT.db.focusCastBar.showEmpowerStages = val end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Hide Friendly Casts", 4, y,
+        function() return LWT.db.focusCastBar.hideFriendlyCasts or false end,
+        function(val) LWT.db.focusCastBar.hideFriendlyCasts = val end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Show Shield Icon (non-interruptible)", 4, y,
+        function() return LWT.db.focusCastBar.showShieldIcon or false end,
+        function(val)
+            LWT.db.focusCastBar.showShieldIcon = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Color Non-Interruptible Casts", 4, y,
+        function() return LWT.db.focusCastBar.colorNonInterrupt or false end,
+        function(val) LWT.db.focusCastBar.colorNonInterrupt = val end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Hide When Kick On Cooldown", 4, y,
+        function() return LWT.db.focusCastBar.hideOnCooldown or false end,
+        function(val) LWT.db.focusCastBar.hideOnCooldown = val end
+    )
+    y = y - 26
+
+    CreateCheckbox(c, "Show Interrupt Tick", 4, y,
+        function() return LWT.db.focusCastBar.showInterruptTick ~= false end,
+        function(val)
+            LWT.db.focusCastBar.showInterruptTick = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 26
+
+    CreateColorPicker(c, "Tick Color", 8, y,
+        function() return LWT.db.focusCastBar.tickColor end,
+        function(val)
+            LWT.db.focusCastBar.tickColor = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 30
+
+    -- ONLY SHOW IN
+    CreateHeader(c, "Only Show In", 4, y)
+    y = y - 24
+
+    local function instanceGet(key, default)
+        return function()
+            local s = LWT.db.focusCastBar.showInInstances or {}
+            if default then return s[key] ~= false end
+            return s[key] or false
+        end
+    end
+    local function instanceSet(key)
+        return function(val)
+            if not LWT.db.focusCastBar.showInInstances then
+                LWT.db.focusCastBar.showInInstances = {}
+            end
+            LWT.db.focusCastBar.showInInstances[key] = val
+        end
+    end
+
+    CreateCheckbox(c, "Dungeons & M+", 4, y, instanceGet("party", true), instanceSet("party"))
+    y = y - 26
+    CreateCheckbox(c, "Raids", 4, y, instanceGet("raid", true), instanceSet("raid"))
+    y = y - 26
+    CreateCheckbox(c, "Arenas", 4, y, instanceGet("arena", true), instanceSet("arena"))
+    y = y - 26
+    CreateCheckbox(c, "Battlegrounds", 4, y, instanceGet("pvp", false), instanceSet("pvp"))
+    y = y - 26
+    CreateCheckbox(c, "Scenarios / Delves", 4, y, instanceGet("scenario", false), instanceSet("scenario"))
+    y = y - 26
+    CreateCheckbox(c, "Open World", 4, y, instanceGet("none", false), instanceSet("none"))
+    y = y - 30
+
+    -- SOUND
+    CreateHeader(c, "Sound", 4, y)
+    y = y - 24
+
+    CreateCheckbox(c, "Play Sound on Cast Start", 4, y,
+        function() return LWT.db.focusCastBar.soundEnabled or false end,
+        function(val) LWT.db.focusCastBar.soundEnabled = val end
+    )
+    y = y - 30
+
+    CreateDropdown(c, "Sound", 8, y,
+        function() return LWT:GetSoundList() end,
+        function() return LWT.db.focusCastBar.soundName or "None" end,
+        function(name)
+            if name == "None" then
+                LWT.db.focusCastBar.soundName = nil
+            else
+                LWT.db.focusCastBar.soundName = name
+                -- Preview sound
+                local sounds = LWT:GetSoundList()
+                for _, entry in ipairs(sounds) do
+                    if entry.name == name and entry.path then
+                        PlaySoundFile(entry.path, "Master")
+                        break
+                    end
+                end
+            end
+        end
+    )
+    y = y - 56
+
+    fcbPage:SetContentHeight(math.abs(y) + 10)
+end
+
+-- =========================================================
 -- Events
 -- =========================================================
 settingsFrame:SetScript("OnShow", function()
