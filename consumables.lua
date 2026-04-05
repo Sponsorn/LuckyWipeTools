@@ -68,6 +68,9 @@ local function OnSpellCastSucceeded(unit, castGUID, spellID)
     if InCombatLockdown() then return end
     if not IsInRaid() then return end
 
+    local _, instanceType = GetInstanceInfo()
+    if instanceType ~= "raid" then return end
+
     local label = MatchConsumable(spellID)
     if not label then return end
 

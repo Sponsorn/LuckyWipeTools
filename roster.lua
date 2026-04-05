@@ -110,7 +110,7 @@ local function UpdateDisplay(outside)
 
     for i, info in ipairs(outside) do
         if i > MAX_ROWS then break end
-        local color = info.class and C_ClassColor.GetClassColor(info.class)
+        local color = info.class and not issecretvalue(info.class) and C_ClassColor.GetClassColor(info.class)
         local nameText = color and color:WrapTextInColorCode(info.name) or info.name
 
         -- Append status indicator
@@ -180,36 +180,43 @@ local function Scan()
 
     local outside = {}
 
+    -- In mythic difficulty, only groups 1-4 are in the encounter
+    local _, _, difficultyID = GetInstanceInfo()
+    local maxGroup = (difficultyID == 16) and 4 or 8
+
     for i = 1, GetNumGroupMembers() do
         local unit = "raid" .. i
         if UnitExists(unit) and not UnitIsUnit(unit, "player") then
-            local name = UnitName(unit)
-            if name and not issecretvalue(name) then
-                local connected = UnitIsConnected(unit)
-                local isOutside = false
-                local isOffline = not connected
+            local _, _, subgroup = GetRaidRosterInfo(i)
+            if subgroup and subgroup <= maxGroup then
+                local name = UnitName(unit)
+                if name and not issecretvalue(name) then
+                    local connected = UnitIsConnected(unit)
+                    local isOutside = false
+                    local isOffline = not connected
 
-                if isOffline then
-                    isOutside = true
-                else
-                    local memberMap = C_Map.GetBestMapForUnit(unit)
-                    if not memberMap then
+                    if isOffline then
                         isOutside = true
-                    elseif not issecretvalue(memberMap) and memberMap ~= playerMap then
-                        isOutside = true
+                    else
+                        local memberMap = C_Map.GetBestMapForUnit(unit)
+                        if not memberMap then
+                            isOutside = true
+                        elseif not issecretvalue(memberMap) and memberMap ~= playerMap then
+                            isOutside = true
+                        end
                     end
-                end
 
-                if isOutside then
-                    local _, className = UnitClass(unit)
-                    local summonStatus = C_IncomingSummon.IncomingSummonStatus(unit)
-                    table.insert(outside, {
-                        name = name,
-                        class = className,
-                        unit = unit,
-                        summonStatus = summonStatus,
-                        offline = isOffline,
-                    })
+                    if isOutside then
+                        local _, className = UnitClass(unit)
+                        local summonStatus = C_IncomingSummon.IncomingSummonStatus(unit)
+                        table.insert(outside, {
+                            name = name,
+                            class = className,
+                            unit = unit,
+                            summonStatus = summonStatus,
+                            offline = isOffline,
+                        })
+                    end
                 end
             end
         end
@@ -311,6 +318,12 @@ rosterFrame:SetScript("OnEvent", function(_, event, ...)
         return
     end
 
+    if not IsInRaid() then
+        if ticker then ticker:Cancel(); ticker = nil end
+        if frame then frame:Hide() end
+        return
+    end
+
     if event == "PLAYER_REGEN_DISABLED" then
         -- Stop polling but keep roster visible with last-known data
         if ticker then ticker:Cancel(); ticker = nil end
@@ -325,7 +338,7 @@ rosterFrame:SetScript("OnEvent", function(_, event, ...)
         return
     elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
         local _, _, spellID = ...
-        if spellID == RITUAL_OF_SUMMONING then
+        if not issecretvalue(spellID) and spellID == RITUAL_OF_SUMMONING then
             portalExpiry = GetTime() + PORTAL_DURATION
             local db = GetDB()
             if db.showPortalPlaced ~= false then
@@ -341,12 +354,6 @@ rosterFrame:SetScript("OnEvent", function(_, event, ...)
     elseif event == "INCOMING_SUMMON_CHANGED" then
         ScanSummons()
         Scan()
-        return
-    end
-
-    if not IsInRaid() then
-        if ticker then ticker:Cancel(); ticker = nil end
-        if frame then frame:Hide() end
         return
     end
 

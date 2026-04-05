@@ -4,6 +4,13 @@
 - Add: Focus Cast Bar — shows focus target casts with interrupt tracking, color-coded kick availability, and interrupt cooldown tick marker
 - Add: Instance filter — only show focus cast bar in selected content types (dungeons, raids, arenas, etc.)
 - Add: Full color customization for all bar elements (ready, on CD, non-interruptible, background, tick)
+- Fix: Summon roster no longer shows bench players (groups 5+) in mythic raids
+- Fix: Consumable notifications no longer trigger when crafting cauldrons outside the raid instance
+- Fix: Roster event handler no longer processes events outside of raid instances
+- Fix: Summoning portal spell ID comparison handles secret values
+- Fix: Vantus buff scanning and addon messages no longer run during combat
+- Fix: Secret value guards added to class color lookups in roster and vantus displays
+- Fix: Secret value guard on player name lookup in vantus buff scanning
 
 ## [0.2.2] - 2026-04-05
 - Add: Version checker — notifies once per day if guild members have a newer version

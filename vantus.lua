@@ -135,13 +135,13 @@ local function ScanBuffs()
     end
 
     local selfName = UnitName("player")
-    if selfName and HasVantusBuff("player") and rosterData[selfName] then
+    if selfName and not issecretvalue(selfName) and HasVantusBuff("player") and rosterData[selfName] then
         rosterData[selfName] = nil
         changed = true
     end
 
     for name in pairs(rosterData) do
-        if not inRaid[name] and name ~= selfName then
+        if not inRaid[name] and (not selfName or name ~= selfName) then
             rosterData[name] = nil
             changed = true
         end
@@ -391,7 +391,7 @@ function LWT:UpdateVantusRoster()
 
     for i, info in ipairs(sorted) do
         if i > MAX_ROWS then break end
-        local color = info.class and C_ClassColor.GetClassColor(info.class)
+        local color = info.class and not issecretvalue(info.class) and C_ClassColor.GetClassColor(info.class)
         local nameText = color and color:WrapTextInColorCode(info.name) or info.name
 
         if info.requested then
@@ -506,6 +506,8 @@ eventFrame:RegisterEvent("GROUP_ROSTER_UPDATE")
 eventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 eventFrame:RegisterEvent("ADDON_RESTRICTION_STATE_CHANGED")
+eventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+eventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
     local db = GetDB()
@@ -513,6 +515,21 @@ eventFrame:SetScript("OnEvent", function(_, event, ...)
         if frame then frame:Hide() end
         return
     end
+
+    if event == "PLAYER_REGEN_DISABLED" then
+        if buffTicker then buffTicker:Cancel(); buffTicker = nil end
+        return
+    elseif event == "PLAYER_REGEN_ENABLED" then
+        if IsInRaid() then
+            if not buffTicker then
+                buffTicker = C_Timer.NewTicker(BUFF_SCAN_INTERVAL, ScanBuffs)
+            end
+            ScanBuffs()
+        end
+        return
+    end
+
+    if InCombatLockdown() then return end
 
     if event == "CHAT_MSG_ADDON" then
         OnAddonMessage(...)
