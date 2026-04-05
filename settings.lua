@@ -1351,6 +1351,15 @@ settingsFrame:SetScript("OnShow", function()
     end
 end)
 
+settingsFrame:HookScript("OnHide", function()
+    -- Re-lock focus cast bar when settings close
+    if LWT.db and LWT.db.focusCastBar and not LWT.db.focusCastBar.locked then
+        if LWT.SetFocusCastBarLocked then
+            LWT:SetFocusCastBarLocked(true)
+        end
+    end
+end)
+
 -- =========================================================
 -- Public API
 -- =========================================================
