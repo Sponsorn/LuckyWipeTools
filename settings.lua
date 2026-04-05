@@ -1110,6 +1110,21 @@ do
     )
     y = y - 30
 
+    CreateCheckbox(c, "Highlight Important Casts", 4, y,
+        function() return LWT.db.focusCastBar.highlightImportant ~= false end,
+        function(val) LWT.db.focusCastBar.highlightImportant = val end
+    )
+    y = y - 26
+
+    CreateColorPicker(c, "Important Cast Color", 8, y,
+        function() return LWT.db.focusCastBar.importantColor end,
+        function(val)
+            LWT.db.focusCastBar.importantColor = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 30
+
     CreateColorPicker(c, "Non-Interruptible Color", 8, y,
         function() return LWT.db.focusCastBar.nonIntColor end,
         function(val)

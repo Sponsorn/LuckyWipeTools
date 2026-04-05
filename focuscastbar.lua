@@ -18,6 +18,7 @@ local resizeHandle
 
 local isCasting = false
 local isChanneling = false
+local isImportantCast = false
 local castEndTime = 0
 local castStartTime = 0
 local castDuration = 0
@@ -321,24 +322,33 @@ local function CreateCastBarFrame()
             progressBar:SetValue(math.max(progress, 0))
         end
 
-        -- Update bar color based on interrupt cooldown
-        local spellId = GetInterruptSpellId()
-        if spellId then
-            local cdDuration = C_Spell.GetSpellCooldownDuration(spellId)
-            if cdDuration then
-                local isReady = cdDuration:IsZero()
-                if isReady then
-                    local c = udb.barReadyColor
-                    progressBar:SetStatusBarColor(c.r, c.g, c.b)
-                else
-                    local c = udb.barCdColor
-                    progressBar:SetStatusBarColor(c.r, c.g, c.b)
-                end
+        -- Update bar color based on important cast / interrupt cooldown
+        if isImportantCast and udb.highlightImportant then
+            local c = udb.importantColor
+            if c then
+                progressBar:SetStatusBarColor(c.r, c.g, c.b)
+            else
+                progressBar:SetStatusBarColor(0.0, 0.8, 0.8)
+            end
+        else
+            local spellId = GetInterruptSpellId()
+            if spellId then
+                local cdDuration = C_Spell.GetSpellCooldownDuration(spellId)
+                if cdDuration then
+                    local isReady = cdDuration:IsZero()
+                    if isReady then
+                        local c = udb.barReadyColor
+                        progressBar:SetStatusBarColor(c.r, c.g, c.b)
+                    else
+                        local c = udb.barCdColor
+                        progressBar:SetStatusBarColor(c.r, c.g, c.b)
+                    end
 
-                -- Hide on CD option
-                if udb.hideOnCooldown and not isReady then
-                    castBarFrame:Hide()
-                    return
+                    -- Hide on CD option
+                    if udb.hideOnCooldown and not isReady then
+                        castBarFrame:Hide()
+                        return
+                    end
                 end
             end
         end
@@ -416,6 +426,7 @@ local function StartCast()
 
     isCasting = true
     isChanneling = false
+    isImportantCast = spellId and C_Spell.IsSpellImportant(spellId) or false
     castStartTime = startTimeMs / 1000
     castEndTime = endTimeMs / 1000
     castDuration = duration
@@ -477,6 +488,7 @@ local function StartChannel()
 
     isCasting = false
     isChanneling = true
+    isImportantCast = spellId and C_Spell.IsSpellImportant(spellId) or false
     castStartTime = startTimeMs / 1000
     castEndTime = endTimeMs / 1000
     castDuration = duration
@@ -521,6 +533,7 @@ end
 local function StopCast()
     isCasting = false
     isChanneling = false
+    isImportantCast = false
     castEndTime = 0
     castStartTime = 0
     castDuration = 0

@@ -121,6 +121,8 @@ local defaults = {
         pos = nil,
         barReadyColor    = { r = 0.18, g = 0.54, b = 0.18 },
         barCdColor       = { r = 0.70, g = 0.36, b = 0.13 },
+        importantColor   = { r = 0.0, g = 0.8, b = 0.8 },
+        highlightImportant = true,
         nonIntColor      = { r = 0.45, g = 0.45, b = 0.45 },
         bgColor          = { r = 0.08, g = 0.08, b = 0.08 },
         bgAlpha          = 0.8,
