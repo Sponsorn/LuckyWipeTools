@@ -1092,6 +1092,24 @@ do
     CreateHeader(c, "Appearance", 4, y)
     y = y - 24
 
+    CreateSlider(c, "Bar Width", 8, y, 100, 500, 5,
+        function() return LWT.db.focusCastBar.width or 250 end,
+        function(val)
+            LWT.db.focusCastBar.width = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 52
+
+    CreateSlider(c, "Bar Height", 8, y, 12, 48, 1,
+        function() return LWT.db.focusCastBar.height or 24 end,
+        function(val)
+            LWT.db.focusCastBar.height = val
+            LWT:UpdateFocusCastBar()
+        end
+    )
+    y = y - 52
+
     CreateColorPicker(c, "Ready Color", 8, y,
         function() return LWT.db.focusCastBar.barReadyColor end,
         function(val)
