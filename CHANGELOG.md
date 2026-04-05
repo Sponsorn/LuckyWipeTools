@@ -1,5 +1,14 @@
 # LuckyWipeTools Changelog
 
+## [0.2.2] - 2026-04-05
+- Add: Version checker — notifies once per day if guild members have a newer version
+- Add: Soulwell notification with flavor text ("Come get your cookies!")
+- Add: Flavor text for all consumable notifications (feast, cauldron, soulwell)
+- Add: Consumable notifications stack when multiple are placed in quick succession
+- Change: Default notification color changed to white
+- Fix: Summon roster only shows inside raid instances
+- Fix: Summon portal event no longer shows roster outside raid instances
+
 ## [0.2.1] - 2026-04-04
 - Add: Consumables module — notifies when a raid member places a feast or cauldron (Harandar Celebration, Voidlight Potion Cauldron, Cauldron of Sin'dorei Flasks)
 - Add: `/lwt send vantus` — raid leaders/assistants can notify the raid to request vantus runes, opens roster with everyone's buff status
