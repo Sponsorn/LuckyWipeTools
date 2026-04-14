@@ -208,6 +208,7 @@ frame:SetScript("OnEvent", function(_, event, arg1)
     if event == "ADDON_LOADED" and arg1 == ADDON_NAME then
         LWT:SetupDB()
         C_ChatInfo.RegisterAddonMessagePrefix("LWT")
+        C_ChatInfo.RegisterAddonMessagePrefix("LanternCA")
         LWT:Print("Loaded. Type /lwt for help.")
         frame:UnregisterEvent("ADDON_LOADED")
     end

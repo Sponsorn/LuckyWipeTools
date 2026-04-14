@@ -1,24 +1,37 @@
 local ADDON_NAME, LWT = ...
 
--- Tracked consumable keywords and their display labels
--- We match against the spell name from UNIT_SPELLCAST_SUCCEEDED
-local CONSUMABLE_PATTERNS = {
-    { pattern = "Hearty Harandar Celebration",  label = "a Hearty Harandar Celebration. Eat up!" },
-    { pattern = "Harandar Celebration",         label = "a Harandar Celebration. Eat up!" },
-    { pattern = "Voidlight Potion Cauldron",    label = "a Voidlight Potion Cauldron. Grab your potions!" },
-    { pattern = "Cauldron of Sin'dorei Flasks", label = "a Cauldron of Sin'dorei Flasks. Flask up!" },
-    { pattern = "Create Soulwell",              label = "a Soulwell. Come get your cookies!" },
-    { pattern = "Soulwell",                    label = "a Soulwell. Come get your cookies!" },
-}
+local COMM_PREFIX = "LanternCA"
+local COMM_VERSION = 1
 
--- Sort longest patterns first so "Hearty Harandar Celebration" matches before "Harandar Celebration"
-table.sort(CONSUMABLE_PATTERNS, function(a, b)
-    return #a.pattern > #b.pattern
-end)
+-- Defer display to Lantern's ConsumableAlerts if loaded and enabled
+local function LanternHandles()
+    local Lantern = _G.Lantern
+    if (Lantern and Lantern.modules and Lantern.modules["ConsumableAlerts"]
+        and Lantern.modules["ConsumableAlerts"].enabled) then
+        return true
+    end
+    return false
+end
 
--- Fallback: known spell IDs for consumables that might not match by name
-local SPELL_ID_LABELS = {
-    [29893]  = "a Soulwell. Come get your cookies!",  -- Create Soulwell
+-- Tracked consumable spell IDs -> display labels
+local CONSUMABLE_SPELLS = {
+    -- Feasts
+    [1259656] = "a Blooming Feast. Eat up!",
+    [1259657] = "a Quel'dorei Medley. Eat up!",
+    [1259658] = "a Harandar Celebration. Eat up!",
+    [1259659] = "a Silvermoon Parade. Eat up!",
+    [1278909] = "a Hearty Blooming Feast. Eat up!",
+    [1278915] = "a Hearty Quel'dorei Medley. Eat up!",
+    [1278929] = "a Hearty Harandar Celebration. Eat up!",
+    [1278895] = "a Hearty Silvermoon Parade. Eat up!",
+    -- Cauldrons
+    [1240019] = "a Cauldron of Sin'dorei Flasks. Flask up!",
+    [1240225] = "a Voidlight Potion Cauldron. Grab your potions!",
+    -- Warlock
+    [29893]   = "a Soulwell. Come get your cookies!",
+    -- Repair
+    [199109]  = "an Auto-Hammer. Repair up!",
+    [67826]   = "Jeeves. Repair up!",
 }
 
 local activeMessages = {}
@@ -44,48 +57,68 @@ local function AddMessage(msg)
     ShowMessages()
 end
 
-local function MatchConsumable(spellID)
-    -- Check spell ID directly first
-    if SPELL_ID_LABELS[spellID] then
-        return SPELL_ID_LABELS[spellID]
-    end
-    -- Then match by name
-    local name = C_Spell.GetSpellName(spellID)
-    if not name then return nil end
-    for _, entry in ipairs(CONSUMABLE_PATTERNS) do
-        if name:find(entry.pattern, 1, true) then
-            return entry.label
-        end
-    end
-    return nil
+-------------------------------------------------------------------------------
+-- Addon Communication
+-------------------------------------------------------------------------------
+
+local function BroadcastConsumable(spellID)
+    if not IsInGroup() then return end
+    local channel = IsInRaid() and "RAID" or "PARTY"
+    C_ChatInfo.SendAddonMessage(COMM_PREFIX, tostring(COMM_VERSION) .. ":" .. tostring(spellID), channel)
 end
 
 local function OnSpellCastSucceeded(unit, castGUID, spellID)
     if not spellID or issecretvalue(spellID) then return end
+    if unit ~= "player" then return end
 
     local db = GetDB()
     if not db.enabled then return end
-    if InCombatLockdown() then return end
-    if not IsInRaid() then return end
+    if not IsInGroup() then return end
 
-    local _, instanceType = GetInstanceInfo()
-    if instanceType ~= "raid" then return end
+    local label = CONSUMABLE_SPELLS[spellID]
+    if not label then return end
+    if LanternHandles() then return end
 
-    local label = MatchConsumable(spellID)
+    BroadcastConsumable(spellID)
+end
+
+local function OnAddonMessage(prefix, message, channel, sender)
+    if prefix ~= COMM_PREFIX then return end
+
+    local db = GetDB()
+    if not db.enabled then return end
+    if LanternHandles() then return end
+
+    -- Parse message: "version:spellID"
+    local version, spellIDStr = strsplit(":", message, 2)
+    if not version or not spellIDStr then return end
+    if tonumber(version) ~= COMM_VERSION then return end
+
+    local spellID = tonumber(spellIDStr)
+    if not spellID then return end
+
+    local label = CONSUMABLE_SPELLS[spellID]
     if not label then return end
 
-    local caster = UnitName(unit)
-    if not caster or issecretvalue(caster) then return end
+    local caster = Ambiguate(sender, "short")
 
     AddMessage(caster .. " placed " .. label)
 end
 
--- Event frame
+-------------------------------------------------------------------------------
+-- Event Frame
+-------------------------------------------------------------------------------
+
 local eventFrame = CreateFrame("Frame", "LWT_ConsumablesEventFrame")
 eventFrame:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
+eventFrame:RegisterEvent("CHAT_MSG_ADDON")
 
 eventFrame:SetScript("OnEvent", function(_, event, ...)
-    OnSpellCastSucceeded(...)
+    if event == "UNIT_SPELLCAST_SUCCEEDED" then
+        OnSpellCastSucceeded(...)
+    elseif event == "CHAT_MSG_ADDON" then
+        OnAddonMessage(...)
+    end
 end)
 
 -- Clear stacked messages when the alert fades/hides

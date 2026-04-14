@@ -1,5 +1,10 @@
 # LuckyWipeTools Changelog
 
+## [0.2.4]
+- Change: Consumable alerts now use addon communication (shared with Lantern) — each player broadcasts their own consumable placements to the group instead of relying on spell event detection. All group members need LWT or Lantern for full coverage.
+- Add: Consumable alerts now track repair bots (Auto-Hammer, Jeeves) and all feast variants
+- Change: Consumable alerts now work in any group (party or raid), not just raid instances
+
 ## [0.2.3] - 2026-04-05
 - Add: Focus Cast Bar — shows focus target casts with interrupt tracking, color-coded kick availability, and interrupt cooldown tick marker
 - Add: Instance filter — only show focus cast bar in selected content types (dungeons, raids, arenas, etc.)

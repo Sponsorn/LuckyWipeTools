@@ -238,6 +238,18 @@ local function CreateCastBarFrame()
     })
     borderFrame:SetBackdropBorderColor(0, 0, 0, 0.6)
 
+    -- Important cast glow (colored border, hidden by default)
+    local importantGlow = CreateFrame("Frame", "LWT_FocusCastBar_ImportantGlow", castBarFrame, "BackdropTemplate")
+    importantGlow:SetPoint("TOPLEFT", -2, 2)
+    importantGlow:SetPoint("BOTTOMRIGHT", 2, -2)
+    importantGlow:SetBackdrop({
+        edgeFile = "Interface\\Buttons\\WHITE8X8",
+        edgeSize = 2,
+    })
+    importantGlow:SetFrameLevel(borderFrame:GetFrameLevel() - 1)
+    importantGlow:Hide()
+    castBarFrame._importantGlow = importantGlow
+
     -- Text frame (overlay on progress bar)
     textFrame = CreateFrame("Frame", "LWT_FocusCastBar_Text", progressBar)
     textFrame:SetAllPoints()
@@ -336,40 +348,46 @@ local function CreateCastBarFrame()
             progressBar:SetValue(math.max(progress, 0))
         end
 
-        -- Update bar color based on important cast / interrupt cooldown
-        if isImportantCast and udb.highlightImportant then
-            local c = udb.importantColor
-            if c then
-                progressBar:SetStatusBarColor(c.r, c.g, c.b)
+        -- Update important cast glow
+        if castBarFrame._importantGlow then
+            if isImportantCast and udb.highlightImportant then
+                local c = udb.importantColor
+                if c then
+                    castBarFrame._importantGlow:SetBackdropBorderColor(c.r, c.g, c.b, 1)
+                else
+                    castBarFrame._importantGlow:SetBackdropBorderColor(0.0, 0.8, 0.8, 1)
+                end
+                castBarFrame._importantGlow:Show()
             else
-                progressBar:SetStatusBarColor(0.0, 0.8, 0.8)
+                castBarFrame._importantGlow:Hide()
             end
-        else
-            local spellId = GetInterruptSpellId()
-            if spellId then
-                local cdDuration = C_Spell.GetSpellCooldownDuration(spellId)
-                if cdDuration then
-                    local isReady = cdDuration:IsZero()
-                    if isReady then
-                        local c = udb.barReadyColor
-                        progressBar:SetStatusBarColor(c.r, c.g, c.b)
-                    else
-                        local c = udb.barCdColor
-                        progressBar:SetStatusBarColor(c.r, c.g, c.b)
-                    end
+        end
 
-                    -- Hide on CD option
-                    if udb.hideOnCooldown and not isReady then
-                        castBarFrame:Hide()
-                        return
-                    end
+        -- Update bar color based on interrupt cooldown
+        local interruptSpellId = GetInterruptSpellId()
+        if interruptSpellId then
+            local cdDuration = C_Spell.GetSpellCooldownDuration(interruptSpellId)
+            if cdDuration then
+                local isReady = cdDuration:IsZero()
+                if isReady then
+                    local c = udb.barReadyColor
+                    progressBar:SetStatusBarColor(c.r, c.g, c.b)
+                else
+                    local c = udb.barCdColor
+                    progressBar:SetStatusBarColor(c.r, c.g, c.b)
+                end
+
+                -- Hide on CD option
+                if udb.hideOnCooldown and not isReady then
+                    castBarFrame:Hide()
+                    return
                 end
             end
         end
 
         -- Update interrupt tick
-        if udb.showInterruptTick ~= false and spellId then
-            local cdDuration = C_Spell.GetSpellCooldownDuration(spellId)
+        if udb.showInterruptTick ~= false and interruptSpellId then
+            local cdDuration = C_Spell.GetSpellCooldownDuration(interruptSpellId)
             if cdDuration and not cdDuration:IsZero() then
                 local cdRemaining = cdDuration:GetSeconds()
                 if castDuration > 0 and cdRemaining > 0 and cdRemaining < castDuration then
@@ -435,12 +453,13 @@ local function StartCast()
     if db.hideFriendlyCasts and UnitIsFriend("player", "focus") then return end
 
     local durationMs = UnitCastingDuration("focus")
-    if not durationMs or durationMs <= 0 then return end
+    if not durationMs or issecretvalue(durationMs) or durationMs <= 0 then return end
+    if issecretvalue(startTimeMs) or issecretvalue(endTimeMs) then return end
     local duration = durationMs / 1000
 
     isCasting = true
     isChanneling = false
-    isImportantCast = spellId and C_Spell.IsSpellImportant(spellId) or false
+    isImportantCast = spellId and not issecretvalue(spellId) and C_Spell.IsSpellImportant(spellId) or false
     castStartTime = startTimeMs / 1000
     castEndTime = endTimeMs / 1000
     castDuration = duration
@@ -497,12 +516,13 @@ local function StartChannel()
     if db.hideFriendlyCasts and UnitIsFriend("player", "focus") then return end
 
     local durationMs = UnitChannelDuration("focus")
-    if not durationMs or durationMs <= 0 then return end
+    if not durationMs or issecretvalue(durationMs) or durationMs <= 0 then return end
+    if issecretvalue(startTimeMs) or issecretvalue(endTimeMs) then return end
     local duration = durationMs / 1000
 
     isCasting = false
     isChanneling = true
-    isImportantCast = spellId and C_Spell.IsSpellImportant(spellId) or false
+    isImportantCast = spellId and not issecretvalue(spellId) and C_Spell.IsSpellImportant(spellId) or false
     castStartTime = startTimeMs / 1000
     castEndTime = endTimeMs / 1000
     castDuration = duration
@@ -553,6 +573,9 @@ local function StopCast()
     castDuration = 0
     if castBarFrame then
         castBarFrame:Hide()
+        if castBarFrame._importantGlow then
+            castBarFrame._importantGlow:Hide()
+        end
     end
     if shieldIcon then
         shieldIcon:SetAlpha(0)
