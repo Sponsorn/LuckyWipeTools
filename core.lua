@@ -64,12 +64,12 @@ local ALERT_DEFAULTS = {
 local defaults = {
     lastVersionCheck = nil,
     gateway = {
-        enabled = true,
+        enabled = false,
         combatOnly = true,
         alert = ALERT_DEFAULTS,
     },
     summon = {
-        enabled = true,
+        enabled = false,
         showPortalPlaced = true,
         showStatus = true,
         showRoster = true,
@@ -77,7 +77,7 @@ local defaults = {
         alert = ALERT_DEFAULTS,
     },
     itemSplitter = {
-        enabled = true,
+        enabled = false,
         popupPos = nil,
     },
     combatLog = {
@@ -100,11 +100,11 @@ local defaults = {
         instances = {},     -- [instanceID:difficultyID] = { enabled, name, diffName }
     },
     consumables = {
-        enabled = true,
+        enabled = false,
         alert = ALERT_DEFAULTS,
     },
     vantus = {
-        enabled = true,
+        enabled = false,
         showRoster = true,
         difficulties = {
             heroic = true,

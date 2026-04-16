@@ -4,6 +4,16 @@ local INTERRUPT_SPELLS = LWT.INTERRUPT_SPELLS
 
 local DEFAULT_FONT = "Fonts\\FRIZQT__.TTF"
 
+-- Defer to Lantern's FocusCastBar if loaded and enabled
+local function LanternHandles()
+    local Lantern = _G.Lantern
+    if (Lantern and Lantern.modules and Lantern.modules["FocusCastBar"]
+        and Lantern.modules["FocusCastBar"].enabled) then
+        return true
+    end
+    return false
+end
+
 -------------------------------------------------------------------------------
 -- State
 -------------------------------------------------------------------------------
@@ -704,6 +714,10 @@ loader:SetScript("OnEvent", function(_, event, ...)
     if not db or not db.enabled then return end
     if not db.locked then return end
     if not instanceAllowed then return end
+    if LanternHandles() then
+        if castBarFrame then castBarFrame:Hide() end
+        return
+    end
 
     if event == "UNIT_SPELLCAST_START" then
         StartCast()

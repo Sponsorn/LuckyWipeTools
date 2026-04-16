@@ -1,5 +1,15 @@
 local ADDON_NAME, LWT = ...
 
+-- Defer to Lantern's GatewayReady if loaded and enabled
+local function LanternHandles()
+    local Lantern = _G.Lantern
+    if (Lantern and Lantern.modules and Lantern.modules["GatewayReady"]
+        and Lantern.modules["GatewayReady"].enabled) then
+        return true
+    end
+    return false
+end
+
 local POLL_INTERVAL = 0.1
 local ticker = nil
 local lastUsable = false
@@ -18,6 +28,12 @@ local function HideGatewayAlert()
 end
 
 local function CheckGateway()
+    if LanternHandles() then
+        if lastUsable then HideGatewayAlert() end
+        lastUsable = false
+        return
+    end
+
     local db = LWT.db
     if not db or not db.gateway.enabled then
         if lastUsable then HideGatewayAlert() end
